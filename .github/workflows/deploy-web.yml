@@ -1,0 +1,40 @@
+name: Deploy web app (Expo Hosting)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_PUBLIC_SUPABASE_URL: https://ftkakywjnokhmnzxilob.supabase.co
+      EXPO_PUBLIC_SUPABASE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Link the Expo project (first run only)
+        run: |
+          if ! grep -q '"projectId"' app.json; then
+            npx --yes eas-cli@latest init --non-interactive --force
+            git config user.name "skillprogress-ci"; git config user.email "ci@users.noreply.github.com"
+            git add app.json && git commit -m "Link Expo project" && git push
+          fi
+      - name: Build and deploy
+        run: |
+          mkdir -p ../ci-out
+          npx expo export --platform web > ../ci-out/web-export.txt 2>&1
+          npx --yes eas-cli@latest deploy --prod --non-interactive --json > ../ci-out/web-deploy.json 2> ../ci-out/web-deploy-log.txt; echo "exit=$?" >> ../ci-out/web-deploy-log.txt
+          tail -20 ../ci-out/web-deploy-log.txt; cat ../ci-out/web-deploy.json
+          grep -q 'exit=0' ../ci-out/web-deploy-log.txt
+      - name: Publish result to ci-results branch
+        if: always()
+        working-directory: .
+        run: |
+          git config user.name "skillprogress-ci"; git config user.email "ci@users.noreply.github.com"
+          git fetch origin ci-results && git worktree add -B ci-results /tmp/ci FETCH_HEAD
+          mkdir -p /tmp/ci/web && cp ci-out/* /tmp/ci/web/ 2>/dev/null; echo "${GITHUB_SHA}" > /tmp/ci/web/commit.txt
+          cd /tmp/ci && git add -A && git commit -qm "Web deploy ${GITHUB_RUN_ID}" && git push origin ci-results

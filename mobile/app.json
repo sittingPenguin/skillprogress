@@ -24,7 +24,9 @@
       "package": "uk.jameswoodward.skillprogress"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "SkillProgress"
     },
     "plugins": [
       "expo-router",
