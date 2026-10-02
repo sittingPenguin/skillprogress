@@ -1,0 +1,959 @@
+<title>SkillProgress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a demo stage with a role/device toolbar above a live app frame (phone or tablet); the app inside is an Instagram-style private feed. */
+:root{
+  --bg:#E9EEEC; --surface:#FFFFFF; --surface-2:#F4F7F6; --ink:#11201C; --muted:#5A6A66; --line:#DCE4E1;
+  --brand:#0E6B60; --brand-soft:#DDF0EC; --accent:#E5482F; --accent-soft:#FDE6E1;
+  --ok:#1D7A4B; --ok-soft:#DFF3E7; --draft:#5B4BC4; --draft-soft:#ECE9FB; --warn:#9A5600; --warn-soft:#FBEBD3;
+  --bezel:#16211E; --ring1:#FFB020; --ring2:#F2562F; --ring3:#D93A7B;
+  --display:"Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A100F; --surface:#111A18; --surface-2:#18231F; --ink:#E6EEEB; --muted:#93A39F; --line:#26332F;
+  --brand:#45C2B1; --brand-soft:#123430; --accent:#FF6E55; --accent-soft:#3A1C16;
+  --ok:#5CCB8E; --ok-soft:#12301F; --draft:#A99CFF; --draft-soft:#221D44; --warn:#F0B055; --warn-soft:#352612;
+  --bezel:#2A3532; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A100F; --surface:#111A18; --surface-2:#18231F; --ink:#E6EEEB; --muted:#93A39F; --line:#26332F;
+  --brand:#45C2B1; --brand-soft:#123430; --accent:#FF6E55; --accent-soft:#3A1C16;
+  --ok:#5CCB8E; --ok-soft:#12301F; --draft:#A99CFF; --draft-soft:#221D44; --warn:#F0B055; --warn-soft:#352612;
+  --bezel:#2A3532; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:20px 28px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.stage{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+.toolbar{width:100%;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center}
+.toolbar h1{font-family:var(--display);font-weight:800;font-size:20px;margin:0;letter-spacing:-.01em}
+.toolbar h1 span{color:var(--muted);font-weight:600;font-family:var(--body);font-size:14px;margin-left:6px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:999px;font-weight:600;font-size:13.5px;color:var(--muted);min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:13.5px;min-height:36px}
+.note{font-size:12.5px;color:var(--muted);text-align:center;max-width:60ch;margin:0}
+
+.device{width:390px;max-width:100%;height:800px;border:10px solid var(--bezel);border-radius:46px;overflow:hidden;background:var(--surface);container-type:inline-size;container-name:app;box-shadow:0 30px 60px -30px rgba(10,30,25,.45);transition:width .3s ease}
+.device.tablet{width:860px;height:880px;border-radius:34px}
+@media (max-width:520px){.device,.device.tablet{width:100%;height:calc(100dvh - 150px);min-height:560px;border-width:0;border-radius:18px;border:1px solid var(--line)}}
+
+.app{height:100%;display:flex;flex-direction:column;position:relative;background:var(--surface)}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line);background:var(--surface);z-index:2}
+.wordmark{font-family:var(--display);font-weight:800;font-size:23px;letter-spacing:-.02em;margin:0}
+.wordmark b{color:var(--accent)}
+.topbar .title{font-family:var(--display);font-weight:600;font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.privpill{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--brand);background:var(--brand-soft);padding:4px 9px;border-radius:999px;white-space:nowrap}
+.iconbtn{border:0;background:none;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;flex:none}
+.iconbtn:hover{background:var(--surface-2)}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.wrap{max-width:620px;margin:0 auto}
+.nav{display:flex;justify-content:space-around;border-top:1px solid var(--line);padding:6px 6px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface)}
+.nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted);min-width:56px;min-height:48px;padding:4px;border-radius:12px}
+.nav button[aria-current="page"]{color:var(--ink)}
+.nav button.plus svg{background:var(--ink);color:var(--surface);border-radius:10px;padding:5px;width:34px;height:30px}
+svg.i{width:24px;height:24px;flex:none}
+svg.s{width:16px;height:16px;flex:none}
+
+/* stories */
+.stories{display:flex;gap:14px;overflow-x:auto;padding:14px 16px 10px;scrollbar-width:none}
+.story{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:5px;width:68px;flex:none;font-size:12px;padding:0}
+.story span.n{max-width:68px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ring{padding:3px;border-radius:50%;background:var(--line)}
+.ring.new{background:conic-gradient(from 210deg,var(--ring1),var(--ring2),var(--ring3),var(--ring1))}
+.ring > .av{border:3px solid var(--surface)}
+.av{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:19px;color:#fff;flex:none}
+.av.sm{width:34px;height:34px;font-size:12.5px;border-width:2px}
+.av.lg{width:84px;height:84px;font-size:28px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;white-space:nowrap;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+/* post */
+.post{border-top:1px solid var(--line);padding-bottom:14px}
+.post-h{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.post-h .who{flex:1;min-width:0}
+.post-h .who b{display:block;font-size:14.5px}
+.post-h .who small{color:var(--muted);font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;flex:none}
+.pill.pub{background:var(--ok-soft);color:var(--ok)}
+.pill.draft{background:var(--draft-soft);color:var(--draft)}
+.pill.restr{background:var(--warn-soft);color:var(--warn)}
+.pill.priv{background:var(--surface-2);color:var(--muted)}
+
+.player{position:relative;background:#0d1719;user-select:none}
+.player canvas{display:block;width:100%;aspect-ratio:4/5}
+.player .pp{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;border:0;background:rgba(255,255,255,.88);color:#11201C;display:grid;place-items:center;transition:opacity .2s}
+.player.playing .pp{opacity:0}
+.player .pp svg{width:28px;height:28px}
+.pctrl{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0d1719;color:#e7efec;font-family:var(--mono);font-size:12px}
+.pctrl input[type=range]{flex:1;min-width:0;accent-color:var(--ring2);height:28px}
+.pctrl .spd{border:1px solid rgba(255,255,255,.3);background:none;color:inherit;border-radius:8px;padding:4px 7px;font-family:var(--mono);font-size:12px;min-height:30px}
+.pctrl .spd[aria-pressed="true"]{background:#e7efec;color:#0d1719}
+.pctrl .tbtn{border:0;background:none;color:inherit;width:32px;height:32px;display:grid;place-items:center}
+.tc{font-variant-numeric:tabular-nums;min-width:48px}
+
+.actions{display:flex;gap:4px;padding:6px 8px 0;align-items:center}
+.act{border:0;background:none;display:inline-flex;align-items:center;gap:6px;padding:8px;border-radius:10px;font-weight:600;font-size:13.5px;min-height:40px}
+.act:hover{background:var(--surface-2)}
+.act.on{color:var(--accent)}
+.act.on svg{fill:currentColor}
+.act.right{margin-left:auto}
+.cap{padding:2px 16px 0;font-size:14.5px}
+.cap p{margin:6px 0}
+.lvls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.lvl{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.pips{display:inline-flex;gap:2px}
+.pips i{width:7px;height:7px;border-radius:2px;border:1.5px solid var(--brand)}
+.pips i.f{background:var(--brand)}
+.goalbox{display:flex;gap:10px;align-items:flex-start;background:var(--brand-soft);border-radius:12px;padding:10px 12px;margin:10px 0 4px;font-size:14px}
+.goalbox svg{color:var(--brand);margin-top:1px}
+.goalbox small{display:block;color:var(--brand);font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.moments{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:2px}
+.moments button{border:0;background:none;display:flex;gap:10px;align-items:baseline;text-align:left;width:100%;padding:6px 4px;border-radius:8px;font-size:13.5px}
+.moments button:hover{background:var(--surface-2)}
+.moments .tcb{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:500;flex:none}
+.privnote{margin-top:10px;border:1.5px dashed var(--line);border-radius:12px;padding:8px 12px;font-size:13.5px;color:var(--muted)}
+.privnote b{display:flex;gap:5px;align-items:center;color:var(--ink);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.meta{color:var(--muted);font-size:12.5px}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;font-size:14.5px;min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.pri{background:var(--ink);color:var(--surface)}
+.btn.acc{background:var(--accent);color:#fff}
+.btn.sec{background:var(--surface-2);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.block{width:100%}
+.inline-cta{margin:10px 16px 0}
+
+/* profile */
+.prof{display:flex;gap:18px;align-items:center;padding:18px 16px 6px}
+.prof h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:-.01em}
+.stats{display:flex;gap:18px;margin-top:8px}
+.stats div{font-size:12.5px;color:var(--muted)}
+.stats b{display:block;font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+.prof-actions{display:flex;gap:8px;padding:10px 16px}
+.prof-actions .btn{flex:1;min-height:40px;padding:8px 10px;font-size:13.5px}
+.tabs{display:flex;border-bottom:1px solid var(--line);margin-top:6px}
+.tabs button{flex:1;border:0;background:none;padding:12px 4px;font-weight:600;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;min-height:46px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+@container app (min-width:640px){.grid{grid-template-columns:repeat(4,1fr)}}
+.tile{position:relative;border:0;padding:0;background:#0d1719;aspect-ratio:1}
+.tile canvas{width:100%;height:100%;display:block}
+.tile .tb{position:absolute;left:6px;bottom:6px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:6px}
+.tile .tt{position:absolute;right:6px;top:6px}
+.blk{padding:14px 16px}
+.blk h3{font-family:var(--display);font-size:17px;margin:0 0 4px}
+.crit{margin:14px 0}
+.crit-h{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:600}
+.crit-h span{color:var(--muted);font-weight:500}
+.spark{width:100%;height:auto;display:block;margin-top:4px}
+.goal{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.goal:last-child{border-bottom:0}
+.goal p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.gs{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;margin-top:6px}
+.gs.achieved{background:var(--ok-soft);color:var(--ok)}
+.gs.progress{background:var(--brand-soft);color:var(--brand)}
+.gs.replaced{background:var(--surface-2);color:var(--muted);text-decoration:none}
+.callout{display:flex;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--muted);margin:10px 0}
+.callout.warn{background:var(--warn-soft);border-color:transparent;color:var(--ink)}
+.callout.warn svg{color:var(--warn)}
+
+/* lists */
+.list{list-style:none;margin:0;padding:0}
+.row{display:flex;align-items:center;gap:12px;padding:10px 16px;border:0;background:none;width:100%;text-align:left;min-height:64px}
+.row:hover{background:var(--surface-2)}
+.row .grow{flex:1;min-width:0}
+.row small{display:block;color:var(--muted);font-size:12.5px}
+.grouphead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px 2px}
+.grouphead .meta{display:inline-flex;align-items:center;gap:4px}
+.newchip{display:inline-flex;align-items:center;gap:4px;border-style:dashed}
+.chip .meta{font-weight:500;margin-left:2px}
+.chip[aria-pressed="true"] .meta{color:inherit;opacity:.7}
+.pick .row{padding-inline:4px;border-radius:12px}
+.tick{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent;flex:none}
+.pick .row[aria-pressed="true"] .tick{background:var(--brand);border-color:var(--brand);color:#fff}
+.search{margin:12px 16px;display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;padding:0 12px}
+.search input{border:0;background:none;flex:1;padding:11px 0;min-width:0}
+.search input:focus{outline:none}
+.search:focus-within{outline:3px solid var(--brand)}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
+.field label,.flabel{font-weight:600;font-size:13.5px}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 12px;min-height:46px;width:100%}
+.field textarea{min-height:76px;resize:vertical}
+.field .hint{font-size:12px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.srcs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.src{border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;min-height:100px}
+.src small{font-weight:500;color:var(--muted);font-size:12px;text-align:center}
+.src[aria-pressed="true"]{border-color:var(--ink);background:var(--surface-2)}
+.viewfinder{position:relative;border-radius:16px;overflow:hidden;background:#0d1719;margin-bottom:14px}
+.viewfinder canvas{display:block;width:100%;aspect-ratio:4/3}
+.rec{position:absolute;top:10px;left:10px;display:flex;gap:6px;align-items:center;color:#fff;font-family:var(--mono);font-size:12px;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:6px}
+.rec i{width:9px;height:9px;border-radius:50%;background:#ff4b3a;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.progress{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.progress > i{display:block;height:100%;background:var(--brand);transition:width .2s}
+.upcard{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.upcard .hd{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px}
+.upcard .hd span{font-variant-numeric:tabular-nums}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;margin-bottom:14px}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--brand);flex:none}
+
+.rub{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.rub-h{font-weight:700;font-size:14px;margin-bottom:8px}
+.lvlbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lvlbtns.l3{grid-template-columns:repeat(3,1fr)}
+.lvlbtns button{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 2px;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px}
+.lvlbtns button b{font-size:16px;font-family:var(--display)}
+.lvlbtns button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.lvldesc{font-size:13px;color:var(--muted);margin-top:8px;min-height:1.4em}
+.addmoment{display:flex;gap:8px}
+.addmoment input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;min-height:46px}
+.foot{position:sticky;bottom:0;display:flex;gap:10px;padding:12px 16px;background:var(--surface);border-top:1px solid var(--line)}
+.foot .btn{flex:1}
+.privfield{border:1.5px dashed var(--line);border-radius:14px;padding:12px}
+.privfield label{display:flex;align-items:center;gap:6px}
+
+/* compare */
+.cmp-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px 4px}
+.cmp-grid{display:grid;grid-template-columns:1fr;gap:14px;padding:8px 0}
+.cmp-grid .player canvas{aspect-ratio:5/4}
+@container app (min-width:640px){.cmp-grid{grid-template-columns:1fr 1fr;padding:8px 16px;gap:16px}.cmp-grid .player canvas{aspect-ratio:4/5}.cmp-col{border:1px solid var(--line);border-radius:16px;overflow:hidden}}
+.cmp-tag{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px}
+.cmp-tag b{font-family:var(--display);font-size:16px}
+.badge{font-family:var(--display);font-weight:800;width:26px;height:26px;border-radius:8px;display:inline-grid;place-items:center;background:var(--ink);color:var(--surface);font-size:14px;margin-right:6px}
+.alignrow{display:flex;gap:8px;align-items:center;padding:8px 14px;font-size:12.5px;color:var(--muted)}
+.alignrow .btn{min-height:36px;padding:6px 10px;font-size:12.5px;border-radius:10px}
+.cmp-info{padding:0 14px 12px;font-size:13.5px}
+.linkbar{margin:0 16px;padding:12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px;font-size:13px}
+.linkbar .row2{display:flex;gap:8px;flex-wrap:wrap}
+.linkbar .btn{flex:1;min-height:42px;font-size:13.5px}
+table.diff{width:100%;border-collapse:collapse;font-size:13.5px}
+table.diff th,table.diff td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+table.diff th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chg{display:inline-flex;gap:4px;align-items:center;font-weight:700;white-space:nowrap}
+.chg.up{color:var(--ok)}
+.chg.same{color:var(--muted)}
+.chg.down{color:var(--warn)}
+
+/* alerts */
+.lock{margin:16px;border-radius:22px;padding:18px;background:linear-gradient(160deg,#20363a,#0f1b1d);color:#eef4f2}
+.lock .clock{font-family:var(--display);font-size:44px;font-weight:600;text-align:center;line-height:1}
+.lock .date{text-align:center;font-size:13px;opacity:.8;margin-bottom:14px}
+.notif{background:rgba(255,255,255,.14);border-radius:14px;padding:10px 12px;font-size:13px;display:flex;gap:10px}
+.notif .ic{width:30px;height:30px;border-radius:8px;background:#E5482F;display:grid;place-items:center;font-family:var(--display);font-weight:800;color:#fff;flex:none}
+.cap-label{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:14px 16px 4px;margin:0}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--display);font-size:17px;margin-bottom:4px}
+
+.toast{position:absolute;left:50%;bottom:86px;transform:translate(-50%,20px);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-weight:600;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:10;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="stage">
+  <div class="toolbar">
+    <h1>SkillProgress <span>pilot demo</span></h1>
+    <div class="seg" role="group" aria-label="View the app as">
+      <button id="roleCoach" data-role="coach" aria-pressed="true">Coach</button>
+      <button id="roleParent" data-role="parent" aria-pressed="false">Parent</button>
+    </div>
+    <div class="seg" role="group" aria-label="Device size">
+      <button id="devPhone" data-device="phone" aria-pressed="true">Phone</button>
+      <button id="devTablet" data-device="tablet" aria-pressed="false">iPad</button>
+    </div>
+    <button class="ghost" id="resetDemo">Reset demo</button>
+  </div>
+  <div class="device" id="device">
+    <div class="app" id="app">
+      <div class="topbar" id="topbar"></div>
+      <main class="screen" id="screen"></main>
+      <nav class="nav" id="nav" aria-label="Main"></nav>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+  <p class="note">Synthetic pupils and simulated video only. Nothing on this page leaves your browser. Switch to Parent to see exactly what a family can see.</p>
+</div>
+
+<script>
+/* ---------- icons ---------- */
+const IC = {
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.7.2 4.4 1.9 5 5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  compare:'<rect x="3" y="5" width="7.5" height="14" rx="1.5"/><rect x="13.5" y="5" width="7.5" height="14" rx="1.5"/>',
+  bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+  heart:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 1 1 8 0v2.5"/>',
+  pencil:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  play:'<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+  pause:'<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" stroke="none"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  same:'<path d="M5 12h14"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  cam:'<rect x="2.5" y="6.5" width="13" height="11" rx="2"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+  chart:'<path d="M4 20V4M4 20h16"/><path d="M7.5 15l4-4.5 3 3L20 7"/>',
+  replace:'<path d="M4 8h12l-3-3M20 16H8l3 3"/>',
+  align:'<path d="M12 3v18"/><path d="M5 8l3 4-3 4M19 8l-3 4 3 4"/>',
+  wifi:'<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 15.8a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1" fill="currentColor"/>'
+};
+const icon = (n, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- synthetic data ---------- */
+const L4 = ['Emerging','Developing','Secure','Excelling'];
+const RUBRICS = {
+  'shoot-v1': { name:'Netball shooting', version:1, levels:['Working towards','Meeting','Exceeding'], criteria:[
+    {key:'stance', name:'Stance', d:['Feet together or uneven','Feet hip-width, mostly steady','Stable, balanced stance every shot']},
+    {key:'release', name:'Release', d:['Ball pushed from the chest','Ball released above the head','High, controlled release with a flick']} ]},
+  'shoot-v2': { name:'Netball shooting', version:2, levels:L4, criteria:[
+    {key:'balance', name:'Balance', d:['Wobbles or steps after the shot','Mostly steady, small sway at release','Steady base, weight even on both feet','Fully balanced from set-up to landing']},
+    {key:'position', name:'Positioning', d:['Ball held in front of the face or to one side','Ball above the head but elbows flare out','Ball above the forehead, elbows under the ball','Same high release point on every shot']},
+    {key:'timing', name:'Timing', d:['Knees and arms move separately','Some knee bend, but arms start early','Knees bend, then arms extend in one rhythm','Smooth, repeatable rhythm under pressure']},
+    {key:'follow', name:'Follow-through', d:['Arms drop straight after release','Short wrist flick','Wrists flick, fingers point at the ring','Holds the follow-through until the ball lands']} ]},
+  'pass-v1': { name:'Chest pass', version:1, levels:L4, criteria:[
+    {key:'stance', name:'Stance', d:['Feet together, upright','Feet apart, little knee bend','Staggered stance, knees soft','Balanced and ready to move after the pass']},
+    {key:'hands', name:'Hand shape', d:['Palms flat behind the ball','Hands to the sides, thumbs apart','W-shape, thumbs behind the ball','Clean W-shape on every catch and pass']},
+    {key:'step', name:'Step and push', d:['No step into the pass','Step and push happen separately','Steps in as arms push','Powerful, accurate step-and-push to chest height']},
+    {key:'follow', name:'Follow-through', d:['Arms stop at the chest','Arms extend part way','Arms fully extend, thumbs point down','Full extension, thumbs down, eyes on the target']} ]},
+  'pivot-v1': { name:'Pivot footwork', version:1, levels:L4, criteria:[
+    {key:'land', name:'Landing', d:['Lands off balance','Lands on one foot, wobbles','Two-foot or one-two landing, balanced','Controlled landing at speed']},
+    {key:'pivot', name:'Pivot', d:['Landing foot moves','Pivots but foot drags','Pivots cleanly on the ball of the foot','Pivots both ways under pressure']} ]}
+};
+const SKILLS = [
+  {id:'shooting', name:'Shooting', rubric:'shoot-v2', motion:'shoot'},
+  {id:'chest', name:'Chest pass', rubric:'pass-v1', motion:'pass'},
+  {id:'pivot', name:'Pivot footwork', rubric:'pivot-v1', motion:'shoot'}
+];
+const skill = id => SKILLS.find(s => s.id === id);
+const PARENT_OF = ['ava'];
+
+const SEED = () => ({
+  students: [
+    {id:'ava', name:'Ava M.', ini:'AM', col:'#C2410C'},
+    {id:'leo', name:'Leo K.', ini:'LK', col:'#0E7490'},
+    {id:'priya', name:'Priya S.', ini:'PS', col:'#7C3AED'},
+    {id:'noah', name:'Noah T.', ini:'NT', col:'#15803D'},
+    {id:'isla', name:'Isla R.', ini:'IR', col:'#BE185D'},
+    {id:'zara', name:'Zara O.', ini:'ZO', col:'#1D4ED8'}
+  ],
+  groups: [
+    {id:'y8', name:'Year 8 Netball Club', members:['ava','leo','priya','noah','isla','zara'], locked:true},
+    {id:'g-shoot', name:'Shooting squad', members:['ava','isla','noah']},
+    {id:'g-new', name:'New to netball', members:['leo','zara']}
+  ],
+  clips: [
+    {id:'c8', sid:'ava', skill:'shooting', rec:'2026-09-26', up:'2026-09-26 16:05', status:'published', q:.86, off:.6, drill:'5 shots from the top of the circle',
+      rubric:'shoot-v2', scores:{balance:3, position:3, timing:3, follow:2},
+      feedback:'Big step forward today, Ava. You bent your knees before every shot and the ball went up from above your forehead. Three out of five went in.',
+      strengths:'Knee bend and rhythm', improve:'Hold your arms up after the ball leaves your hands',
+      goal:'Hold your follow-through until the ball lands', note:'Tired by the end of the session. Keep sets short next week.',
+      moments:[{t:.85,text:'Nice deep knee bend'},{t:1.45,text:'Elbows under the ball now'},{t:2.05,text:'Arms drop a little early here'}], restricted:false, cheer:true},
+    {id:'c7', sid:'isla', skill:'shooting', rec:'2026-09-26', up:'2026-09-26 16:11', status:'published', q:.62, off:.9, drill:'5 shots from the top of the circle',
+      rubric:'shoot-v2', scores:{balance:3, position:2, timing:3, follow:3},
+      feedback:'Lovely balance, Isla. Your follow-through is the best in your set. Next we work on keeping the ball above your forehead.',
+      strengths:'Balance and follow-through', improve:'Start with the ball higher', goal:'Start each shot with the ball above your forehead', note:'', moments:[{t:1.6,text:'Great finish'}], restricted:false, cheer:false},
+    {id:'c6', sid:'priya', skill:'chest', rec:'2026-09-26', up:'2026-09-26 15:58', status:'published', q:.7, off:.8, drill:'Partner passing, 4 m',
+      rubric:'pass-v1', scores:{stance:3, hands:3, step:2, follow:3},
+      feedback:'Strong, flat passes, Priya. Try stepping in at the same time as you push.', strengths:'Hand shape', improve:'Step and push together', goal:'Step in as you push the ball', note:'', moments:[], restricted:false, cheer:false},
+    {id:'c5', sid:'ava', skill:'chest', rec:'2026-09-19', up:'2026-09-19 16:20', status:'published', q:.6, off:.7, drill:'Partner passing, 4 m',
+      rubric:'pass-v1', scores:{stance:3, hands:2, step:3, follow:2},
+      feedback:'Good pace on your passes. Keep your thumbs behind the ball.', strengths:'Stepping into the pass', improve:'Hand shape', goal:'Make a W-shape with your hands', note:'', moments:[{t:1.2,text:'Thumbs drifting apart'}], restricted:false, cheer:true},
+    {id:'c4', sid:'ava', skill:'shooting', rec:'2026-09-12', up:'2026-09-13 08:41', status:'published', q:.28, off:1.5, drill:'5 shots from the top of the circle',
+      rubric:'shoot-v2', scores:{balance:2, position:1, timing:2, follow:1},
+      feedback:'A brave start, Ava. We will work on bending your knees first, so your legs do more of the work.', strengths:'Confident, quick set-up', improve:'Knee bend and arm position',
+      goal:'Bend your knees before you shoot', note:'Uploaded next morning: school Wi-Fi was down on the field.', moments:[{t:1.7,text:'Legs quite straight here'},{t:2.3,text:'Elbows flaring out'}], restricted:false, cheer:false},
+    {id:'c2', sid:'ava', skill:'shooting', rec:'2026-05-14', up:'2026-05-14 15:30', status:'published', q:.18, off:1.1, drill:'Free shooting',
+      rubric:'shoot-v1', scores:{stance:1, release:2},
+      feedback:'First netball session filmed. Great enthusiasm!', strengths:'Enthusiasm', improve:'Stance', goal:'Feet hip-width apart', note:'', moments:[], restricted:false, cheer:false},
+    {id:'c9', sid:'leo', skill:'shooting', rec:'2026-10-01', up:'2026-10-01 16:42', status:'draft', q:.5, off:1.0, drill:'5 shots from the top of the circle',
+      rubric:'shoot-v2', scores:{balance:2, position:2}, feedback:'', strengths:'', improve:'', goal:'', note:'Two other pupils clearly visible behind Leo.', moments:[], restricted:true, cheer:false},
+    {id:'c10', sid:'noah', skill:'shooting', rec:'2026-09-30', up:'2026-09-30 16:10', status:'draft', q:.66, off:.8, drill:'5 shots from the top of the circle',
+      rubric:'shoot-v2', scores:{balance:3, position:3, timing:2}, feedback:'Really controlled set-up, Noah.', strengths:'', improve:'', goal:'', note:'', moments:[], restricted:false, cheer:false}
+  ],
+  goals: {
+    ava: [
+      {text:'Hold your follow-through until the ball lands', status:'progress', set:'26 Sep', clip:'c8', note:'Set after the 26 Sep session.'},
+      {text:'Bend your knees before you shoot', status:'achieved', set:'12 Sep', done:'26 Sep', clip:'c8', note:'Clear knee bend on all five shots.'},
+      {text:'Make a W-shape with your hands', status:'progress', set:'19 Sep', clip:'c5', note:'Chest pass.'},
+      {text:'Keep elbows tucked in', status:'replaced', set:'14 May', note:'Replaced by the knee-bend goal, which fixes this too.'},
+      {text:'Feet hip-width apart', status:'achieved', set:'14 May', done:'12 Sep', clip:'c4', note:'Steady stance in September.'}
+    ]
+  },
+  alerts: [
+    {kind:'update', clip:'c8', when:'26 Sep, 16:30'},
+    {kind:'update', clip:'c5', when:'19 Sep, 16:45'}
+  ]
+});
+
+let D = SEED();
+const S = { role:'coach', device:'phone', view:{name:'home'}, history:[], filter:'all', ptab:'clips', pskill:'shooting', q:'', rec:null, group:'y8', gdraft:null, gdel:false };
+
+const stu = id => D.students.find(s => s.id === id);
+const grp = id => D.groups.find(g => g.id === id) || D.groups[0];
+const clipById = id => D.clips.find(c => c.id === id);
+const fmtDate = (iso, y=false) => { const d = new Date(iso.slice(0,10)+'T12:00:00'); return d.toLocaleDateString('en-GB', y ? {day:'numeric',month:'short',year:'numeric'} : {day:'numeric',month:'short'}); };
+const fmtT = t => { t = Math.max(0,t); const m = Math.floor(t/60), s = t - m*60; return `${m}:${s.toFixed(1).padStart(4,'0')}`; };
+const canSee = c => S.role === 'coach' || (PARENT_OF.includes(c.sid) && c.status === 'published' && !c.restricted);
+const visible = () => D.clips.filter(canSee).sort((a,b) => b.rec.localeCompare(a.rec) || b.up.localeCompare(a.up));
+const avatar = (s, cls='') => `<span class="av ${cls}" style="background:${s.col}" aria-hidden="true">${s.ini}</span>`;
+
+/* ---------- simulated video ---------- */
+const DUR = 4.0, MOVE = 1.6;
+const clamp = (v,a=0,b=1) => Math.min(b, Math.max(a, v));
+const sm = x => { x = clamp(x); return x*x*(3-2*x); };
+const lerp = (a,b,t) => a + (b-a)*t;
+
+function figureAt(ctx, x, G, u, col, lw){ // background child silhouette
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw; ctx.lineCap='round';
+  const L=1.5*u, hip=G-2*L, sh=hip-2*u;
+  ctx.beginPath(); ctx.moveTo(x-.3*u,G); ctx.lineTo(x,hip); ctx.lineTo(x+.3*u,G); ctx.moveTo(x,hip); ctx.lineTo(x,sh);
+  ctx.moveTo(x-.8*u,sh+.9*u); ctx.lineTo(x,sh+.1*u); ctx.lineTo(x+.8*u,sh+.9*u); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, sh-.7*u, .42*u, 0, Math.PI*2); ctx.fill();
+}
+
+function drawClip(ctx, W, H, c, t, speed){
+  const u = Math.min(H/9.5, W/6.2), G = H*0.9, motion = skill(c.skill).motion, q = c.q;
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#1a2a33'); bg.addColorStop(.6,'#24363f'); bg.addColorStop(.6,'#2c4a3e'); bg.addColorStop(1,'#1d362c');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+  for (let x = W*0.06; x < W; x += W/9){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H*.6); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = Math.max(1,u*.06);
+  ctx.beginPath(); ctx.moveTo(0,G+u*.25); ctx.lineTo(W,G+u*.25); ctx.stroke();
+  if (c.restricted){ ctx.save(); ctx.globalAlpha=.55; if ('filter' in ctx) ctx.filter='blur(2px)';
+    figureAt(ctx, W*.12, G-u*.6, u*.62, '#9fb2b8', u*.2); figureAt(ctx, W*.24, G-u*.8, u*.55, '#9fb2b8', u*.18); ctx.restore(); }
+
+  const postX = W*0.86, Ry = G - 6.0*u, rx = postX - .62*u;
+  const X = Math.max(1.4*u, postX - (motion==='pass' ? 5.2 : 4.6)*u);
+  const pc = clamp((t - c.off)/MOVE, 0, 1.7);
+  if (motion === 'shoot'){
+    ctx.strokeStyle='#c9d4d8'; ctx.lineWidth=.2*u; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(postX,G+u*.25); ctx.lineTo(postX,Ry-.2*u); ctx.lineTo(rx+.5*u,Ry); ctx.stroke();
+  } else {
+    ctx.fillStyle='#F2562F'; ctx.beginPath(); ctx.moveTo(postX,G-1.4*u); ctx.lineTo(postX-.5*u,G+.25*u); ctx.lineTo(postX+.5*u,G+.25*u); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=.08*u; ctx.beginPath(); ctx.arc(postX, G-3.3*u, .9*u, 0, Math.PI*2); ctx.stroke();
+  }
+
+  const bend = .3 + .7*q;
+  const dip = pc < .35 ? sm(pc/.35) : pc < .55 ? 1 - sm((pc-.35)/.2) : 0;
+  const k = dip*bend*(motion==='pass'?.6:1), a = k*.8;
+  const rise = (motion==='shoot' && pc > .5 && pc < .85) ? Math.sin((pc-.5)/.35*Math.PI)*(.15+.3*q) : 0;
+  const step = motion==='pass' ? sm((pc-.3)/.3)*(.4+.5*q) : 0;
+  const Lg = 1.5*u, idle = pc===0 ? Math.sin(t*3)*.04*u : 0;
+  const hip = {x: X + .15*u - .25*u*k + step*u*.5, y: G - 2*Lg*Math.cos(a) - rise*u + idle};
+  const sh = {x: hip.x + .25*u*k + .1*u, y: hip.y - 2.0*u};
+  ctx.strokeStyle = '#F3F6F5'; ctx.fillStyle = '#F3F6F5'; ctx.lineWidth = .19*u; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  [[X, 0],[X + .35*u, step*u]].forEach(([f, st]) => {
+    const fx = f + st, knee = {x: (fx + hip.x)/2 + Lg*Math.sin(a), y: (G + hip.y)/2 - rise*u*.4};
+    ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(knee.x, knee.y); ctx.lineTo(fx, G - rise*u); ctx.lineTo(fx + .45*u, G); ctx.stroke();
+  });
+  ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(sh.x, sh.y); ctx.stroke();
+  ctx.beginPath(); ctx.arc(sh.x + .08*u, sh.y - .72*u, .42*u, 0, Math.PI*2); ctx.fill();
+
+  let hold, ext;
+  if (motion === 'shoot'){ hold = {x: sh.x + .3*u, y: sh.y - 1.35*u + k*.3*u}; ext = {x: sh.x + .6*u, y: sh.y - 2.05*u}; }
+  else { hold = {x: sh.x + .5*u, y: sh.y + .55*u}; ext = {x: sh.x + 1.55*u, y: sh.y + .45*u}; }
+  const e = pc < .4 ? 0 : pc < .6 ? sm((pc-.4)/.2) : 1;
+  let hands = {x: lerp(hold.x, ext.x, e), y: lerp(hold.y, ext.y, e)};
+  if (pc > .75){ const dr = sm((pc-.75)/.2)*(1-q); hands = {x: lerp(hands.x, sh.x + .5*u, dr), y: lerp(hands.y, sh.y + 1.2*u, dr)}; }
+  const mid = {x: (sh.x + hands.x)/2, y: (sh.y + hands.y)/2};
+  const elbow = motion === 'shoot' ? {x: mid.x - (.2 + .6*(1-q))*u, y: mid.y + .1*u} : {x: mid.x, y: mid.y + (.35 + .3*(1-q))*u};
+  [0, .1*u].forEach(o => { ctx.beginPath(); ctx.moveTo(sh.x, sh.y); ctx.lineTo(elbow.x + o, elbow.y); ctx.lineTo(hands.x + o, hands.y); ctx.stroke(); });
+  if (pc > .6 && (motion !== 'shoot' || pc < 1.6)){ ctx.lineWidth = .14*u; ctx.beginPath(); ctx.moveTo(hands.x, hands.y);
+    ctx.lineTo(hands.x + (.2 + .2*q)*u, hands.y + (motion==='shoot' ? .25*q*u : .3*u)); ctx.stroke(); }
+
+  // ball
+  let b;
+  const rel = .58;
+  if (pc < rel){ b = motion==='shoot' ? {x: hands.x + .05*u, y: hands.y - .38*u} : {x: hands.x + .4*u, y: hands.y}; }
+  else if (motion === 'shoot'){
+    const st = {x: ext.x + .05*u, y: ext.y - .38*u};
+    const good = q >= .6, tg = good ? {x: rx, y: Ry - .1*u} : {x: rx - .8*u, y: Ry + .05*u};
+    const f = clamp((pc - rel)/.32);
+    b = {x: lerp(st.x, tg.x, f), y: lerp(st.y, tg.y, f) - (1.2 + 1.3*q)*u*4*f*(1-f)};
+    if (f >= 1){ const g = clamp((pc - .9)/.5);
+      b = good ? {x: rx, y: lerp(Ry, G - .36*u, g*g)} : {x: tg.x - g*1.8*u, y: tg.y - Math.sin(g*Math.PI)*.9*u + g*g*(G - .36*u - tg.y)}; }
+  } else {
+    const st = {x: ext.x + .4*u, y: ext.y}, f = clamp((pc - rel)/.4);
+    b = {x: lerp(st.x, postX, f), y: lerp(st.y, G - 3.3*u + (1-q)*1.3*u, f)};
+  }
+  ctx.fillStyle = '#F2B33D'; ctx.beginPath(); ctx.arc(b.x, b.y, .36*u, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = 'rgba(80,40,0,.45)'; ctx.lineWidth = .05*u; ctx.beginPath(); ctx.arc(b.x, b.y, .36*u, -.6, 1.8); ctx.stroke();
+  if (motion === 'shoot'){ ctx.strokeStyle = '#FF6B4A'; ctx.lineWidth = .13*u; ctx.beginPath(); ctx.ellipse(rx, Ry, .55*u, .14*u, 0, 0, Math.PI*2); ctx.stroke(); }
+
+  // overlay text
+  const fs = Math.max(10, u*.36);
+  ctx.font = `500 ${fs}px "IBM Plex Mono", ui-monospace, monospace`; ctx.textBaseline = 'top';
+  ctx.fillStyle = 'rgba(255,255,255,.8)';
+  ctx.fillText(fmtDate(c.rec, true).toUpperCase(), fs*.9, fs*.9);
+  if (speed && speed !== 1){ const s = speed + '×'; ctx.fillText(s, W - fs*.9 - ctx.measureText(s).width, fs*.9); }
+  if (c.restricted){ ctx.fillStyle = 'rgba(240,176,85,.95)'; ctx.fillText('OTHER PUPILS IN SHOT', fs*.9, fs*2.3); }
+}
+
+/* ---------- players ---------- */
+const players = new Map(); let pidN = 0;
+function playerHTML(c, mode='feed'){ // mode: feed | full | thumb
+  const id = 'p' + (++pidN);
+  if (mode === 'thumb') return `<canvas data-clip="${c.id}" data-pid="${id}" data-thumb="1"></canvas>`;
+  const speeds = [1,.5,.25].map(v => `<button class="spd" data-action="speed" data-pid="${id}" data-v="${v}" aria-pressed="${v===1}" aria-label="Speed ${v} times">${v}×</button>`).join('');
+  return `<div class="player" id="${id}-w">
+    <canvas data-clip="${c.id}" data-pid="${id}" role="img" aria-label="${esc(stu(c.sid).name)}, ${esc(skill(c.skill).name)}, recorded ${fmtDate(c.rec,true)}. Simulated clip."></canvas>
+    <button class="pp" data-action="toggle" data-pid="${id}" aria-label="Play">${icon('play')}</button>
+    <div class="pctrl">
+      ${mode==='full' ? `<button class="tbtn" data-action="toggle" data-pid="${id}" aria-label="Play or pause" id="${id}-tb">${icon('play','s')}</button>` : ''}
+      <span class="tc" id="${id}-tc">0:00.0</span>
+      <input type="range" min="0" max="${DUR}" step="0.05" value="0" data-pid="${id}" id="${id}-r" aria-label="Seek">
+      ${speeds}
+    </div></div>`;
+}
+function mountPlayers(root){
+  root.querySelectorAll('canvas[data-pid]').forEach(cv => {
+    const c = clipById(cv.dataset.clip), r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = Math.max(1, Math.round(r.width*dpr)); cv.height = Math.max(1, Math.round(r.height*dpr));
+    const P = {id: cv.dataset.pid, c, cv, ctx: cv.getContext('2d'), t: cv.dataset.thumb ? c.off + MOVE*.52 : 0, playing:false, speed:1, align:null, dirty:true, thumb: !!cv.dataset.thumb};
+    players.set(P.id, P);
+  });
+}
+function paint(P){
+  drawClip(P.ctx, P.cv.width, P.cv.height, P.c, P.t, P.speed);
+  if (P.thumb) return;
+  const w = document.getElementById(P.id+'-w'), tc = document.getElementById(P.id+'-tc'), r = document.getElementById(P.id+'-r'), tb = document.getElementById(P.id+'-tb');
+  if (tc) tc.textContent = fmtT(P.t);
+  if (r && document.activeElement !== r) r.value = P.t;
+  if (w) w.classList.toggle('playing', P.playing);
+  const pp = w && w.querySelector('.pp'); if (pp) { pp.innerHTML = icon(P.playing ? 'pause' : 'play'); pp.setAttribute('aria-label', P.playing ? 'Pause' : 'Play'); }
+  if (tb) tb.innerHTML = icon(P.playing ? 'pause' : 'play', 's');
+}
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(.1, (now - last)/1000); last = now;
+  players.forEach(P => {
+    if (P.playing){ P.t += dt*P.speed; if (P.t >= DUR){ P.t = DUR; P.playing = false; } P.dirty = true; }
+    if (P.dirty && P.cv.isConnected){ paint(P); P.dirty = false; }
+  });
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+function togglePlay(P){ if (P.t >= DUR - .01) P.t = 0; P.playing = !P.playing; P.dirty = true; }
+
+/* ---------- shell ---------- */
+const $ = id => document.getElementById(id);
+function go(view, push=true){ if (push) S.history.push(S.view); S.view = view; render(); $('screen').scrollTop = 0; }
+function back(){ S.view = S.history.pop() || {name:'home'}; render(); }
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2600); }
+
+function navItems(){
+  return S.role === 'coach'
+    ? [['home','home','Home'],['pupils','users','Pupils'],['new','plus','New clip'],['compare','compare','Compare'],['alerts','bell','Alerts']]
+    : [['home','home','Home'],['profile','chart','Ava'],['compare','compare','Compare'],['alerts','bell','Alerts']];
+}
+function rootOf(name){ return {home:'home',pupils:'pupils',group:'pupils',profile: S.role==='parent'?'profile':'pupils',new:'new',assess:'home',compare:'compare',alerts:'alerts',post:'home'}[name] || 'home'; }
+
+function topbar(){
+  const v = S.view, root = S.history.length === 0;
+  const titles = {group: S.gdraft && S.gdraft.id ? 'Edit group' : 'New group', pupils:'Pupils', new:'New clip', assess:'Assess clip', compare:'Compare clips', alerts:'Alerts', post:'Clip', profile: v.sid ? stu(v.sid).name : ''};
+  if (v.name === 'home') return `<p class="wordmark">Skill<b>Progress</b></p><span class="privpill">${icon('lock','s')} Private to Hollins Park</span>`;
+  return `${root ? '' : `<button class="iconbtn" data-action="back" aria-label="Back">${icon('back')}</button>`}<h2 class="title">${esc(titles[v.name] || '')}</h2>
+    ${S.role==='parent' ? `<span class="privpill">${icon('lock','s')} Family view</span>` : `<span class="privpill">${icon('lock','s')} Staff</span>`}`;
+}
+
+function render(){
+  pidN = 0; players.clear();
+  const v = S.view;
+  $('topbar').innerHTML = topbar();
+  const cur = rootOf(v.name);
+  $('nav').innerHTML = navItems().map(([k,ic,l]) => `<button data-nav="${k}" class="${k==='new'?'plus':''}" ${k===cur?'aria-current="page"':''}>${icon(ic)}<span>${l}</span></button>`).join('');
+  const views = {group:vGroup, home:vHome, pupils:vPupils, profile:vProfile, new:vNew, assess:vAssess, compare:vCompare, alerts:vAlerts, post:vPost};
+  $('screen').innerHTML = (views[v.name] || vHome)();
+  mountPlayers($('screen'));
+  if (v.name === 'pupils'){ const pc = document.querySelector('.chips [aria-pressed="true"]'); if (pc){ const row = pc.parentElement; row.scrollLeft = pc.offsetLeft - row.offsetLeft - 16; } }
+}
+
+/* ---------- views ---------- */
+function statusPill(c){
+  if (S.role !== 'coach') return `<span class="pill pub">${icon('lock','s')} Family only</span>`;
+  if (c.restricted) return `<span class="pill restr">${icon('flag','s')} Needs review</span>`;
+  if (c.status === 'draft') return `<span class="pill draft">${icon('pencil','s')} Draft · staff only</span>`;
+  return `<span class="pill pub">${icon('check','s')} Shared with family</span>`;
+}
+function levelChips(c){
+  const R = RUBRICS[c.rubric];
+  return `<div class="lvls">${R.criteria.filter(cr => c.scores[cr.key]).map(cr => { const l = c.scores[cr.key];
+    return `<span class="lvl"><span class="pips" aria-hidden="true">${R.levels.map((_,i) => `<i class="${i<l?'f':''}"></i>`).join('')}</span>${cr.name}: ${R.levels[l-1]} <span class="meta">(${l}/${R.levels.length})</span></span>`; }).join('')}</div>`;
+}
+function postHTML(c){
+  const s = stu(c.sid), sk = skill(c.skill), coach = S.role === 'coach';
+  return `<article class="post" aria-label="${esc(s.name)}, ${esc(sk.name)}, ${fmtDate(c.rec)}">
+    <div class="post-h"><button class="ring ${c.status==='published'?'new':''}" style="border:0;cursor:pointer" data-action="profile" data-sid="${s.id}" aria-label="Open ${esc(s.name)}'s profile">${avatar(s,'sm')}</button>
+      <div class="who"><b>${esc(s.name)} · ${esc(sk.name)}</b><small>Recorded ${fmtDate(c.rec, true)} · Year 8 Netball Club</small></div>${statusPill(c)}</div>
+    ${playerHTML(c,'feed')}
+    <div class="actions">
+      <button class="act ${c.cheer?'on':''}" data-action="cheer" data-id="${c.id}" aria-pressed="${c.cheer}">${icon('heart')}<span>${c.cheer ? 'Cheered' : 'Cheer'}</span></button>
+      <button class="act" data-action="compare" data-sid="${s.id}" data-skill="${c.skill}">${icon('compare')}<span>Compare</span></button>
+      ${coach ? `<button class="act right" data-action="assess" data-id="${c.id}">${icon('pencil')}<span>${c.status==='draft'?'Continue':'Edit'}</span></button>` : ''}
+    </div>
+    <div class="cap">
+      ${c.feedback ? `<p><b>Ms Hughes</b> ${esc(c.feedback)}</p>` : `<p class="meta">No feedback written yet.</p>`}
+      ${levelChips(c)}
+      ${c.moments.length ? `<ul class="moments">${c.moments.map(m => `<li><button data-action="seek" data-t="${m.t}"><span class="tcb">${fmtT(m.t)}</span><span>${esc(m.text)}</span></button></li>`).join('')}</ul>` : ''}
+      ${c.goal ? `<div class="goalbox">${icon('target')}<div><small>Next session</small>${esc(c.goal)}</div></div>` : ''}
+      ${coach && c.note ? `<div class="privnote"><b>${icon('lock','s')} Private coach note</b>${esc(c.note)}</div>` : ''}
+      <p class="meta">${esc(RUBRICS[c.rubric].name)} rubric v${RUBRICS[c.rubric].version}${c.drill ? ' · ' + esc(c.drill) : ''}</p>
+    </div></article>`;
+}
+function vHome(){
+  const clips = visible().filter(c => S.filter === 'all' || c.skill === S.filter);
+  const people = S.role === 'coach' ? grp(S.group).members.map(stu).filter(Boolean) : D.students.filter(s => PARENT_OF.includes(s.id));
+  const hasNew = id => D.clips.some(c => c.sid === id && c.status === 'published' && c.rec >= '2026-09-26');
+  const stories = people.map(s => `<button class="story" data-action="profile" data-sid="${s.id}"><span class="ring ${hasNew(s.id)?'new':''}">${avatar(s)}</span><span class="n">${esc(s.name)}</span></button>`).join('');
+  const drafts = S.role === 'coach' ? D.clips.filter(c => c.status === 'draft').length : 0;
+  return `<div class="wrap">
+    <div class="stories" aria-label="${S.role==='coach'?esc(grp(S.group).name):'Your children'}">${stories}</div>
+    <div class="chips" role="group" aria-label="Filter by skill">
+      ${[['all','All skills'], ...SKILLS.map(s => [s.id, s.name])].map(([id,n]) => `<button class="chip" data-action="filter" data-f="${id}" aria-pressed="${S.filter===id}">${n}</button>`).join('')}
+    </div>
+    ${drafts ? `<div class="callout" style="margin:0 16px 12px">${icon('pencil','s')}<span>${drafts} drafts waiting. Families only see clips after you publish them.</span></div>` : ''}
+    ${S.role==='parent' ? `<div class="callout" style="margin:0 16px 12px">${icon('lock','s')}<span>Only you and Ava's school can see these clips. They are never public.</span></div>` : ''}
+    ${clips.length ? clips.map(postHTML).join('') : `<div class="empty"><b>Nothing here yet</b>No ${S.role==='parent'?'published ':''}clips for ${esc(skill(S.filter)?.name || 'this skill')} so far.</div>`}
+  </div>`;
+}
+function vPost(){ const c = clipById(S.view.id); return `<div class="wrap">${c && canSee(c) ? postHTML(c) : `<div class="empty"><b>Clip unavailable</b>You don't have access to this clip.</div>`}</div>`; }
+
+function vPupils(){
+  const q = S.q.toLowerCase(), g = grp(S.group);
+  const rows = g.members.map(stu).filter(s => s && s.name.toLowerCase().includes(q)).map(s => {
+    const cs = D.clips.filter(c => c.sid === s.id), pub = cs.filter(c => c.status === 'published').length, dr = cs.length - pub;
+    const others = D.groups.filter(x => !x.locked && x.id !== g.id && x.members.includes(s.id)).map(x => x.name);
+    return `<li><button class="row" data-action="profile" data-sid="${s.id}">${avatar(s,'sm')}<span class="grow"><b>${esc(s.name)}</b><small>${pub} published · ${dr} draft${dr===1?'':'s'}${others.length ? ' · also in ' + esc(others.join(', ')) : ''}</small></span>${dr ? `<span class="pill draft">${dr} to finish</span>` : ''}</button></li>`; }).join('');
+  return `<div class="wrap">
+    <div class="chips" style="padding-top:14px" role="group" aria-label="Groups">
+      ${D.groups.map(x => `<button class="chip" data-action="group" data-g="${x.id}" aria-pressed="${x.id===g.id}">${esc(x.name)} <span class="meta">${x.members.length}</span></button>`).join('')}
+      <button class="chip newchip" data-action="newgroup">${icon('plus','s')} New group</button>
+    </div>
+    <label class="search">${icon('search','s')}<span class="sr">Search pupils</span><input id="pupilSearch" placeholder="Search ${esc(g.name)}" value="${esc(S.q)}"></label>
+    <div class="grouphead"><p class="cap-label" style="padding:0">${esc(g.name)} · ${g.members.length} pupil${g.members.length===1?'':'s'}</p>
+      ${g.locked ? `<span class="meta">${icon('lock','s')} Class list from school admin</span>` : `<button class="act" data-action="editgroup" data-g="${g.id}">${icon('pencil','s')} Edit group</button>`}</div>
+    <ul class="list">${rows || `<li class="empty"><b>${q ? 'No pupils match' : 'No pupils in this group'}</b>${q ? 'Try a different name.' : 'Tap Edit group to add pupils.'}</li>`}</ul>
+    <p class="meta" style="padding:8px 16px 20px">Groups are for organising your coaching. Pupils and families never see group names or who else is in a group.</p></div>`;
+}
+function vGroup(){
+  const d = S.gdraft || (S.gdraft = {id:null, name:'', members:[]});
+  const all = D.students;
+  return `<div class="wrap blk">
+    <div class="field"><label for="groupName">Group name</label><input id="groupName" value="${esc(d.name)}" placeholder="e.g. Shooting squad, Tuesday club" maxlength="40"><span class="hint" id="groupErr"></span></div>
+    <div class="grouphead" style="padding:0 0 6px"><span class="flabel">Pupils <span class="meta" id="gcount">${d.members.length} selected</span></span>
+      <button class="act" data-action="gall">${d.members.length === all.length ? 'Clear all' : 'Select all'}</button></div>
+    <ul class="list pick">${all.map(s => `<li><button class="row" data-action="gtoggle" data-sid="${s.id}" aria-pressed="${d.members.includes(s.id)}">${avatar(s,'sm')}<span class="grow"><b>${esc(s.name)}</b><small>Year 8 Netball Club</small></span><span class="tick" aria-hidden="true">${icon('check','s')}</span></button></li>`).join('')}</ul>
+    <p class="meta">Pupils can be in more than one group. Only pupils already on your class lists can be added.</p>
+    <div class="foot" style="margin:14px -16px 0">${d.id ? `<button class="btn sec" data-action="delgroup" id="delBtn">${S.gdel ? 'Tap again to delete' : 'Delete group'}</button>` : `<button class="btn sec" data-action="back">Cancel</button>`}<button class="btn pri" data-action="savegroup">${d.id ? 'Save changes' : 'Create group'}</button></div>
+  </div>`;
+}
+function spark(R, crit, sessions){
+  const n = sessions.length, W = 300, H = 74, x = i => n === 1 ? W/2 : 22 + i*(W-44)/(n-1), y = l => 62 - (l-1)*(48/(R.levels.length-1));
+  const pts = sessions.map((c,i) => c.scores[crit.key] ? [x(i), y(c.scores[crit.key]), c.scores[crit.key]] : null).filter(Boolean);
+  const grid = R.levels.map((_,i) => `<line x1="10" x2="${W-10}" y1="${y(i+1)}" y2="${y(i+1)}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join('');
+  const path = pts.length > 1 ? `<polyline points="${pts.map(p => p[0]+','+p[1]).join(' ')}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>` : '';
+  const dots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="var(--surface)" stroke="var(--brand)" stroke-width="2"/><text x="${p[0]}" y="${p[1]+4}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${p[2]}</text>`).join('');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${crit.name}: ${sessions.map(c => `${fmtDate(c.rec)} level ${c.scores[crit.key] ?? 'not assessed'}`).join(', ')}">${grid}${path}${dots}</svg>`;
+}
+function vProfile(){
+  const sid = S.view.sid || PARENT_OF[0], s = stu(sid);
+  const cs = D.clips.filter(c => c.sid === sid && canSee(c)).sort((a,b) => b.rec.localeCompare(a.rec));
+  const goals = (D.goals[sid] || []);
+  const skillsUsed = [...new Set(cs.map(c => c.skill))];
+  const tab = S.ptab;
+  let body = '';
+  if (tab === 'clips'){
+    body = cs.length ? `<div class="grid">${cs.map(c => `<button class="tile" data-action="post" data-id="${c.id}" aria-label="${esc(skill(c.skill).name)}, ${fmtDate(c.rec,true)}">${playerHTML(c,'thumb')}<span class="tb">${fmtDate(c.rec)} · ${esc(skill(c.skill).name)}</span>${S.role==='coach' && c.status==='draft' ? `<span class="tt pill draft">Draft</span>` : ''}${S.role==='coach' && c.restricted ? `<span class="tt pill restr">Review</span>` : ''}</button>`).join('')}</div>`
+      : `<div class="empty"><b>No clips yet</b>${S.role==='coach' ? 'Record the first clip from the New clip tab.' : 'Clips appear here once the coach publishes them.'}</div>`;
+  } else if (tab === 'progress'){
+    const sk = S.pskill, rub = skill(sk).rubric, R = RUBRICS[rub];
+    const all = cs.filter(c => c.skill === sk && c.status === 'published').sort((a,b) => a.rec.localeCompare(b.rec));
+    const same = all.filter(c => c.rubric === rub), other = all.length - same.length;
+    body = `<div class="chips" style="padding-top:12px" role="group" aria-label="Skill">${SKILLS.map(x => `<button class="chip" data-action="pskill" data-k="${x.id}" aria-pressed="${x.id===sk}">${x.name}</button>`).join('')}</div>
+      <div class="blk" style="padding-top:0">
+      ${same.length ? `<h3>${esc(s.name.split(' ')[0])}'s ${esc(skill(sk).name.toLowerCase())}</h3>
+        <p class="meta">Levels 1–4 on the ${esc(R.name)} rubric v${R.version}: ${R.levels.join(', ')}. Sessions: ${same.map(c => fmtDate(c.rec)).join(' → ')}.</p>
+        ${R.criteria.map(cr => { const lastS = [...same].reverse().find(c => c.scores[cr.key]); const l = lastS?.scores[cr.key];
+          return `<div class="crit"><div class="crit-h">${cr.name}<span>${l ? `Now: ${R.levels[l-1]} (${l}/4)` : 'Not assessed'}</span></div>${spark(R, cr, same)}</div>`; }).join('')}
+        ${other ? `<div class="callout">${icon('chart','s')}<span>${other} earlier session used an older rubric (v1, 3 levels). It's kept with its original meaning and isn't plotted on this scale.</span></div>` : ''}`
+      : `<div class="empty"><b>No published ${esc(skill(sk).name.toLowerCase())} sessions</b>Progress appears after the first assessed clip.</div>`}
+      <p class="meta">This shows ${esc(s.name.split(' ')[0])}'s own development only. There are no rankings between pupils.</p></div>`;
+  } else {
+    const lab = {progress:['In progress','target'], achieved:['Achieved','check'], replaced:['Replaced','replace']};
+    body = `<div class="blk">${goals.length ? goals.map(g => `<div class="goal">${icon(lab[g.status][1])}<div><b>${esc(g.text)}</b><p>Set ${g.set}${g.done ? ` · achieved ${g.done}` : ''}. ${esc(g.note || '')}</p>
+      <span class="gs ${g.status}">${lab[g.status][0]}</span>${g.clip && canSee(clipById(g.clip)) ? ` <button class="act" style="display:inline-flex" data-action="post" data-id="${g.clip}">${icon('play','s')} See clip</button>` : ''}</div></div>`).join('')
+      : `<div class="empty"><b>No goals yet</b>Goals are set when the coach publishes feedback.</div>`}</div>`;
+  }
+  const achieved = goals.filter(g => g.status === 'achieved').length;
+  return `<div class="wrap">
+    <div class="prof"><span class="ring new">${avatar(s,'lg')}</span><div><h2>${esc(s.name)}</h2><div class="meta">Year 8 · Netball Club</div>
+      <div class="stats"><div><b>${cs.length}</b>clips</div><div><b>${achieved}</b>goals achieved</div><div><b>${skillsUsed.length}</b>skills</div></div></div></div>
+    <div class="prof-actions"><button class="btn pri" data-action="compare" data-sid="${sid}" data-skill="shooting">${icon('compare','s')} Compare clips</button>
+      ${S.role==='coach' ? `<button class="btn sec" data-action="newfor" data-sid="${sid}">${icon('cam','s')} New clip</button>` : ''}</div>
+    <div class="tabs" role="tablist">${[['clips','Clips'],['progress','Progress'],['goals','Goals']].map(([k,l]) => `<button role="tab" data-action="ptab" data-k="${k}" aria-selected="${k===tab}">${l}</button>`).join('')}</div>
+    ${body}</div>`;
+}
+
+/* --- record & upload --- */
+function newRec(sid){ return {stage:'form', sid: sid || 'ava', skill:'shooting', date:'2026-10-02', drill:'5 shots from the top of the circle', notes:'', source:null, pct:0, uploadId:null, drop:true, dropped:false, retries:0}; }
+function vNew(){
+  const r = S.rec || (S.rec = newRec());
+  const opts = (arr, v) => arr.map(([k,l]) => `<option value="${k}" ${k===v?'selected':''}>${esc(l)}</option>`).join('');
+  let media = '';
+  if (r.stage === 'recording') media = `<div class="viewfinder"><canvas id="vf"></canvas><span class="rec"><i></i> REC <span id="recT">0:00</span></span></div><button class="btn acc block" data-action="stoprec">Stop recording</button>`;
+  else if (r.source) media = `<div class="callout" style="margin-top:0">${icon('check','s')}<span>${r.source==='camera' ? 'Recorded a 0:04 clip' : 'Picked “IMG_2041.mov” (0:04) from the library'}. It stays on this device until the upload finishes.</span></div>`;
+  else media = `<div class="srcs"><button class="src" data-action="startrec">${icon('cam')}Record<small>Uses the camera</small></button><button class="src" data-action="pick">${icon('upload')}Upload<small>Pick an existing clip</small></button></div>
+    <p class="meta" style="margin:-4px 0 14px">If camera access is turned off, you'll see how to switch it on in Settings, and you can still upload from the library.</p>`;
+  let up = '';
+  if (['compress','upload','failed','done'].includes(r.stage)){
+    const label = {compress:'Compressing for upload…', upload:'Uploading…', failed:'Upload paused', done:'Uploaded'}[r.stage];
+    up = `<div class="upcard" aria-live="polite"><div class="hd"><span>${label}</span><span>${Math.round(r.pct)}%</span></div>
+      <div class="progress" role="progressbar" aria-valuenow="${Math.round(r.pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${r.pct}%"></i></div>
+      <div class="meta">Upload ID <span style="font-family:var(--mono)">${r.uploadId}</span>${r.retries ? ` · resumed ${r.retries}×, same ID, so no duplicate clip` : ''}</div>
+      ${r.stage==='failed' ? `<div class="callout warn" style="margin:0">${icon('wifi','s')}<span>The connection dropped (simulated school Wi-Fi). Your clip is safe on this device and will resume from ${Math.round(r.pct)}%.</span></div>
+        <div class="two"><button class="btn sec" data-action="cancelup">Cancel</button><button class="btn pri" data-action="retry">Retry upload</button></div>` : ''}
+      ${['compress','upload'].includes(r.stage) ? `<button class="btn sec" data-action="cancelup">Cancel upload</button>` : ''}
+    </div>`;
+  }
+  const locked = r.stage !== 'form';
+  return `<div class="wrap blk">
+    <div class="two"><div class="field"><label for="recStudent">Pupil</label><select id="recStudent" data-rec="sid" ${locked?'disabled':''}>${opts(D.students.map(s => [s.id, s.name]), r.sid)}</select></div>
+      <div class="field"><label for="recSkill">Skill</label><select id="recSkill" data-rec="skill" ${locked?'disabled':''}>${opts(SKILLS.map(s => [s.id, s.name]), r.skill)}</select></div></div>
+    <div class="two"><div class="field"><label for="recDate">Recorded on</label><input type="date" id="recDate" data-rec="date" value="${r.date}" ${locked?'disabled':''}><span class="hint">Kept separately from the upload date.</span></div>
+      <div class="field"><label for="recDrill">Drill (optional)</label><input id="recDrill" data-rec="drill" value="${esc(r.drill)}" ${locked?'disabled':''}></div></div>
+    ${media}${up}
+    ${r.stage==='form' ? `<label class="check"><input type="checkbox" id="dropSim" data-action="dropsim" ${r.drop?'checked':''}><span>Simulate a Wi-Fi drop during upload<br><span class="meta">Shows how the app recovers without creating a duplicate clip.</span></span></label>
+      <button class="btn pri block" data-action="upload" ${r.source?'':'disabled'}>${icon('upload','s')} Upload and assess</button>
+      <p class="meta">Tip: film from the same side, at hip height, about 4 m away. Matching angles make comparisons fair.</p>` : ''}
+  </div>`;
+}
+let upTimer = null;
+function runUpload(){
+  clearInterval(upTimer);
+  upTimer = setInterval(() => {
+    const r = S.rec; if (!r || !['compress','upload'].includes(r.stage)){ clearInterval(upTimer); return; }
+    if (r.stage === 'compress'){ r.pct += 9; if (r.pct >= 100){ r.stage = 'upload'; r.pct = 0; } }
+    else { r.pct += 4.5; if (r.drop && !r.dropped && r.pct >= 58){ r.pct = 58; r.stage = 'failed'; r.dropped = true; clearInterval(upTimer); }
+      else if (r.pct >= 100){ r.pct = 100; r.stage = 'done'; clearInterval(upTimer); finishUpload(); } }
+    if (S.view.name === 'new') render();
+  }, 160);
+}
+function finishUpload(){
+  const r = S.rec, sk = skill(r.skill);
+  if (!clipById(r.uploadId)){
+    D.clips.push({id:r.uploadId, sid:r.sid, skill:r.skill, rec:r.date, up:'2026-10-02 10:24', status:'draft', q:.72, off:.8, drill:r.drill, rubric:sk.rubric, scores:{}, feedback:'', strengths:'', improve:'', goal:'', note:'', moments:[], restricted:false, cheer:false});
+  }
+  const id = r.uploadId; S.rec = null;
+  toast('Uploaded. Now add your assessment.');
+  S.history = []; go({name:'assess', id}, false);
+}
+let recTimer = null;
+function startRecording(){
+  S.rec.stage = 'recording'; render();
+  const cv = $('vf'), t0 = performance.now(), fake = {sid:S.rec.sid, skill:S.rec.skill, rec:S.rec.date, q:.7, off:.4, restricted:false};
+  const r = cv.getBoundingClientRect(); cv.width = r.width*2; cv.height = r.height*2;
+  clearInterval(recTimer);
+  recTimer = setInterval(() => { if (!cv.isConnected){ clearInterval(recTimer); return; }
+    const t = (performance.now() - t0)/1000; drawClip(cv.getContext('2d'), cv.width, cv.height, fake, t % DUR, 1);
+    const tt = $('recT'); if (tt) tt.textContent = '0:0' + Math.min(9, Math.floor(t)); }, 33);
+}
+
+/* --- assess --- */
+function vAssess(){
+  const c = clipById(S.view.id); if (!c) return `<div class="empty"><b>Clip not found</b></div>`;
+  const s = stu(c.sid), R = RUBRICS[c.rubric];
+  const rub = R.criteria.map(cr => { const l = c.scores[cr.key];
+    return `<div class="rub" data-crit="${cr.key}"><div class="rub-h">${cr.name}</div>
+      <div class="lvlbtns ${R.levels.length===3?'l3':''}" role="group" aria-label="${cr.name} level">${R.levels.map((n,i) => `<button data-action="level" data-c="${cr.key}" data-l="${i+1}" aria-pressed="${l===i+1}"><b>${i+1}</b>${n}</button>`).join('')}</div>
+      <div class="lvldesc" id="desc-${cr.key}">${l ? esc(cr.d[l-1]) : 'Choose the level that matches what you see.'}</div></div>`; }).join('');
+  const f = (id, key, label, ta, ph='') => `<div class="field"><label for="${id}">${label}</label>${ta ? `<textarea id="${id}" data-bind="${key}" placeholder="${ph}">${esc(c[key])}</textarea>` : `<input id="${id}" data-bind="${key}" value="${esc(c[key])}" placeholder="${ph}">`}</div>`;
+  return `<div class="wrap">
+    <div class="post-h">${avatar(s,'sm')}<div class="who"><b>${esc(s.name)} · ${esc(skill(c.skill).name)}</b><small>Recorded ${fmtDate(c.rec,true)} · uploaded ${fmtDate(c.up,true)} ${c.up.slice(11)}</small></div>${statusPill(c)}</div>
+    ${playerHTML(c,'full')}
+    <div class="blk">
+      <label class="check" style="margin:0"><input type="checkbox" id="restrictBox" data-action="restrict" ${c.restricted?'checked':''}><span><b>Other pupils are visible in this clip</b><br><span class="meta">Flagged clips can't be published until they're reviewed.</span></span></label>
+    </div>
+    <div class="blk" style="padding-top:0"><h3>Moments</h3><p class="meta">Pause on a moment, then add a comment pinned to that time.</p>
+      <ul class="moments" id="momentList">${momentsHTML(c)}</ul>
+      <div class="addmoment"><input id="momentText" placeholder="e.g. Knees bend nicely here" aria-label="Comment for this moment"><button class="btn sec" data-action="addmoment">Add at <span id="momentAt" style="font-family:var(--mono);margin-left:4px">0:00.0</span></button></div></div>
+    <div class="blk"><h3>${esc(R.name)} rubric</h3><p class="meta">Version ${R.version}. Saved with this assessment so its meaning never changes.</p>${rub}</div>
+    <div class="blk"><h3>Feedback for the family</h3>
+      ${f('fbOverall','feedback','Overall feedback',true,'What went well today, in encouraging words')}
+      <div class="two">${f('fbStr','strengths','Strengths',false)}${f('fbImp','improve','To improve',false)}</div>
+      ${f('fbGoal','goal','Goal for next session',false,'One clear thing to practise')}
+      <div class="field privfield"><label for="fbNote">${icon('lock','s')} Private coach note</label><textarea id="fbNote" data-bind="note" placeholder="Only staff can see this">${esc(c.note)}</textarea><span class="hint">Never shown to families or pupils.</span></div>
+    </div>
+    <div class="foot" id="assessFoot">${footHTML(c)}</div></div>`;
+}
+const momentsHTML = c => c.moments.length ? c.moments.sort((a,b) => a.t - b.t).map(m => `<li><button data-action="seek" data-t="${m.t}"><span class="tcb">${fmtT(m.t)}</span><span>${esc(m.text)}</span></button></li>`).join('') : '<li class="meta">No moments yet.</li>';
+const footHTML = c => `<button class="btn sec" data-action="savedraft">Save draft</button><button class="btn acc" data-action="publish" ${c.restricted?'disabled aria-describedby="pubWhy"':''}>${c.status==='published'?'Update for family':'Publish to family'}</button>${c.restricted ? '<span class="sr" id="pubWhy">Publishing is blocked until the clip is reviewed.</span>' : ''}`;
+
+/* --- compare --- */
+function vCompare(){
+  const sid = S.view.sid || (S.role==='parent' ? 'ava' : 'ava'), sk = S.view.skill || 'shooting';
+  const cs = D.clips.filter(c => c.sid === sid && c.skill === sk && canSee(c)).sort((a,b) => a.rec.localeCompare(b.rec));
+  const pickers = `<div class="cmp-pick">
+    ${S.role==='coach' ? `<div class="field" style="margin:0"><label for="cmpStu">Pupil</label><select id="cmpStu" data-cmp="sid">${D.students.map(s => `<option value="${s.id}" ${s.id===sid?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>` : ''}
+    <div class="field" style="margin:0"><label for="cmpSkill">Skill</label><select id="cmpSkill" data-cmp="skill">${SKILLS.map(s => `<option value="${s.id}" ${s.id===sk?'selected':''}>${s.name}</option>`).join('')}</select></div></div>`;
+  if (cs.length < 2) return `<div class="wrap">${pickers}<div class="empty"><b>Two clips needed</b>${esc(stu(sid).name)} has ${cs.length} ${esc(skill(sk).name.toLowerCase())} clip${cs.length===1?'':'s'} so far. Record another to compare.</div></div>`;
+  let a = clipById(S.view.a), b = clipById(S.view.b);
+  if (!a || !cs.includes(a)) a = cs.length > 2 && cs[0].rubric !== cs[cs.length-1].rubric ? cs.find(c => c.rubric === cs[cs.length-1].rubric) : cs[0];
+  if (!b || !cs.includes(b)) b = cs[cs.length-1];
+  if (a === b) a = cs.find(c => c !== b);
+  S.view.a = a.id; S.view.b = b.id;
+  const sel = (key, cur) => `<select id="cmp${key}" data-cmp="${key}" aria-label="Clip ${key.toUpperCase()}">${cs.map(c => `<option value="${c.id}" ${c===cur?'selected':''}>${fmtDate(c.rec,true)}</option>`).join('')}</select>`;
+  const col = (key, c) => { const R = RUBRICS[c.rubric];
+    return `<div class="cmp-col"><div class="cmp-tag"><b><span class="badge">${key.toUpperCase()}</span>${fmtDate(c.rec,true)}</b><div class="field" style="margin:0;max-width:150px">${sel(key, c)}</div></div>
+      ${playerHTML(c,'full')}
+      <div class="alignrow"><button class="btn sec" data-action="setalign" data-key="${key}">${icon('align','s')} Set alignment point</button><span id="al-${key}">Not set</span></div>
+      <div class="cmp-info">${levelChips(c)}${c.feedback ? `<p style="margin:4px 0"><b>Ms Hughes</b> ${esc(c.feedback)}</p>` : ''}<p class="meta">Rubric v${R.version}${c.drill ? ' · ' + esc(c.drill) : ''}</p></div></div>`; };
+  let diff;
+  if (a.rubric === b.rubric){
+    const R = RUBRICS[a.rubric], [o, n] = a.rec <= b.rec ? [a, b] : [b, a];
+    diff = `<div class="blk"><h3>What changed</h3><p class="meta">From ${fmtDate(o.rec)} to ${fmtDate(n.rec)}, same rubric (v${R.version}).</p>
+      <table class="diff"><thead><tr><th>Area</th><th>${fmtDate(o.rec)}</th><th>${fmtDate(n.rec)}</th><th>Change</th></tr></thead><tbody>
+      ${R.criteria.map(cr => { const x = o.scores[cr.key], y = n.scores[cr.key];
+        if (!x || !y) return `<tr><td>${cr.name}</td><td>${x ? R.levels[x-1] : '–'}</td><td>${y ? R.levels[y-1] : '–'}</td><td class="meta">Not assessed</td></tr>`;
+        const d = y - x, cls = d > 0 ? 'up' : d < 0 ? 'down' : 'same', ic = d > 0 ? 'up' : d < 0 ? 'down' : 'same';
+        const txt = d > 0 ? `Up ${d} level${d>1?'s':''}` : d < 0 ? `Down ${-d}` : 'Same';
+        return `<tr><td>${cr.name}</td><td>${R.levels[x-1]}</td><td>${R.levels[y-1]}</td><td><span class="chg ${cls}">${icon(ic,'s')}${txt}</span></td></tr>`; }).join('')}
+      </tbody></table><p class="meta">Each area is shown on its own. We don't add them up into a single score.</p></div>`;
+  } else {
+    diff = `<div class="blk"><div class="callout">${icon('chart','s')}<span>These clips were assessed with different rubric versions (v${RUBRICS[a.rubric].version} and v${RUBRICS[b.rubric].version}), so their levels can't be compared directly. Watch the clips and read the feedback instead.</span></div></div>`;
+  }
+  return `<div class="wrap" style="max-width:none">${pickers}
+    <div class="cmp-grid">${col('a', a)}${col('b', b)}</div>
+    <div class="linkbar"><b>Play together</b><span id="linkHint">Scrub each clip to the same moment (for example, the ball leaving the hands) and tap “Set alignment point” on both. The clips don't start at the same point, so this lines them up.</span>
+      <div class="row2"><button class="btn pri" data-action="linkplay" data-v="1" id="linkBtn" disabled>${icon('play','s')} Play both</button><button class="btn sec" data-action="linkplay" data-v="0.25" id="linkSlow" disabled>Play both at 0.25×</button></div></div>
+    ${diff}
+    <div class="blk" style="padding-top:0"><p class="meta">Tip: matching drills and camera angles make comparisons fairer.</p></div></div>`;
+}
+
+/* --- alerts --- */
+function vAlerts(){
+  if (S.role === 'parent'){
+    const items = D.alerts.filter(a => canSee(clipById(a.clip)));
+    return `<div class="wrap"><div class="lock" aria-label="Example lock-screen notification"><div class="clock">16:30</div><div class="date">Friday 26 September</div>
+      <div class="notif"><span class="ic">S</span><div><b>SkillProgress</b><br>A new update is ready. Sign in to view.</div></div></div>
+      <p class="meta" style="padding:0 16px">Lock-screen notifications never show your child's name, clips or feedback. Opening one asks you to sign in.</p>
+      <p class="cap-label">Updates</p><ul class="list">${items.map(a => { const c = clipById(a.clip);
+        return `<li><button class="row" data-action="post" data-id="${c.id}">${avatar(stu(c.sid),'sm')}<span class="grow"><b>New feedback for ${esc(stu(c.sid).name.split(' ')[0])}</b><small>${esc(skill(c.skill).name)} · ${a.when}</small></span>${icon('back','s').replace('M15 5l-7 7 7 7','M9 5l7 7-7 7')}</button></li>`; }).join('')}</ul></div>`;
+  }
+  const flagged = D.clips.filter(c => c.restricted), drafts = D.clips.filter(c => c.status === 'draft' && !c.restricted);
+  const row = (c, title, sub, pill) => `<li><button class="row" data-action="assess" data-id="${c.id}">${avatar(stu(c.sid),'sm')}<span class="grow"><b>${title}</b><small>${sub}</small></span>${pill}</button></li>`;
+  return `<div class="wrap"><p class="cap-label">Needs review</p><ul class="list">${flagged.map(c => row(c, `${esc(stu(c.sid).name)}: other pupils in shot`, `${esc(skill(c.skill).name)} · recorded ${fmtDate(c.rec)}. Review before publishing.`, `<span class="pill restr">${icon('flag','s')} Review</span>`)).join('') || '<li class="empty">Nothing to review.</li>'}</ul>
+    <p class="cap-label">Drafts to finish</p><ul class="list">${drafts.map(c => row(c, `${esc(stu(c.sid).name)} · ${esc(skill(c.skill).name)}`, `Recorded ${fmtDate(c.rec)} · not visible to the family yet`, `<span class="pill draft">Draft</span>`)).join('') || '<li class="empty">All caught up.</li>'}</ul></div>`;
+}
+
+/* ---------- events ---------- */
+function P_(pid){ return players.get(pid); }
+function alignState(){
+  const ps = [...players.values()].filter(p => !p.thumb);
+  const ok = ps.length === 2 && ps.every(p => p.align !== null);
+  ['linkBtn','linkSlow'].forEach(id => { const b = $(id); if (b) b.disabled = !ok; });
+  const h = $('linkHint'); if (h && ok) h.textContent = `Aligned: A at ${fmtT(ps[0].align)}, B at ${fmtT(ps[1].align)}. Both clips will reach that moment together.`;
+}
+document.addEventListener('click', e => {
+  const roleB = e.target.closest('[data-role]'), devB = e.target.closest('[data-device]');
+  if (roleB){ S.role = roleB.dataset.role; document.querySelectorAll('[data-role]').forEach(b => b.setAttribute('aria-pressed', b === roleB)); S.history = []; S.view = {name:'home'}; S.filter = 'all'; render(); toast(S.role==='parent' ? 'Viewing as Ava’s parent' : 'Viewing as Ms Hughes, coach'); return; }
+  if (devB){ S.device = devB.dataset.device; document.querySelectorAll('[data-device]').forEach(b => b.setAttribute('aria-pressed', b === devB)); $('device').classList.toggle('tablet', S.device === 'tablet'); setTimeout(render, 320); return; }
+  if (e.target.closest('#resetDemo')){ D = SEED(); S.rec = null; S.group = 'y8'; S.gdraft = null; S.history = []; S.view = {name:'home'}; S.filter='all'; render(); toast('Demo data reset'); return; }
+  const nb = e.target.closest('[data-nav]');
+  if (nb){ const k = nb.dataset.nav; S.history = [];
+    if (k === 'profile') S.view = {name:'profile', sid:'ava'}; else if (k === 'compare') S.view = {name:'compare', sid:'ava', skill:'shooting'}; else S.view = {name:k};
+    if (k === 'profile') S.ptab = 'clips';
+    render(); $('screen').scrollTop = 0; return; }
+  const b = e.target.closest('[data-action]'); if (!b) return;
+  const A = b.dataset.action;
+  const post = b.closest('.post, .wrap');
+  switch (A){
+    case 'back': back(); break;
+    case 'toggle': { const P = P_(b.dataset.pid); if (P) togglePlay(P); break; }
+    case 'speed': { const P = P_(b.dataset.pid); if (!P) break; P.speed = +b.dataset.v; P.dirty = true; b.parentElement.querySelectorAll('.spd').forEach(x => x.setAttribute('aria-pressed', x === b)); break; }
+    case 'seek': { const scope = b.closest('.post') || $('screen'); const cv = scope.querySelector('canvas[data-pid]'); const P = cv && P_(cv.dataset.pid);
+      if (P){ P.t = +b.dataset.t; P.playing = false; P.dirty = true; cv.scrollIntoView({block:'nearest'}); } break; }
+    case 'cheer': { const c = clipById(b.dataset.id); c.cheer = !c.cheer; b.classList.toggle('on', c.cheer); b.setAttribute('aria-pressed', c.cheer); b.querySelector('span').textContent = c.cheer ? 'Cheered' : 'Cheer'; if (c.cheer) toast(S.role==='parent' ? 'Cheer sent to Ms Hughes' : 'Cheered'); break; }
+    case 'filter': S.filter = b.dataset.f; render(); break;
+    case 'group': S.group = b.dataset.g; S.q = ''; render(); break;
+    case 'newgroup': S.gdraft = {id:null, name:'', members:[]}; S.gdel = false; go({name:'group'}); break;
+    case 'editgroup': { const g = grp(b.dataset.g); S.gdraft = {id:g.id, name:g.name, members:[...g.members]}; S.gdel = false; go({name:'group'}); break; }
+    case 'gtoggle': { const d = S.gdraft, i = d.members.indexOf(b.dataset.sid); if (i < 0) d.members.push(b.dataset.sid); else d.members.splice(i,1);
+      b.setAttribute('aria-pressed', i < 0); $('gcount').textContent = d.members.length + ' selected'; break; }
+    case 'gall': { const d = S.gdraft; d.members = d.members.length === D.students.length ? [] : D.students.map(s => s.id); render(); break; }
+    case 'savegroup': { const d = S.gdraft, name = d.name.trim(), err = $('groupErr');
+      if (!name){ err.textContent = 'Give the group a name.'; err.style.color = 'var(--accent)'; $('groupName').focus(); break; }
+      if (D.groups.some(g => g.id !== d.id && g.name.toLowerCase() === name.toLowerCase())){ err.textContent = 'You already have a group with that name.'; err.style.color = 'var(--accent)'; break; }
+      if (!d.members.length){ err.textContent = 'Add at least one pupil.'; err.style.color = 'var(--accent)'; break; }
+      const ord = D.students.map(s => s.id).filter(id => d.members.includes(id));
+      if (d.id){ const g = grp(d.id); g.name = name; g.members = ord; } else { d.id = 'g-' + Math.random().toString(16).slice(2,6); D.groups.push({id:d.id, name, members:ord}); }
+      S.group = d.id; S.gdraft = null; S.history = []; S.view = {name:'pupils'}; render(); toast(`Saved “${name}”`); break; }
+    case 'delgroup': { if (!S.gdel){ S.gdel = true; b.textContent = 'Tap again to delete'; b.style.color = 'var(--accent)'; break; }
+      const name = grp(S.gdraft.id).name; D.groups = D.groups.filter(g => g.id !== S.gdraft.id); S.group = 'y8'; S.gdraft = null; S.gdel = false;
+      S.history = []; S.view = {name:'pupils'}; render(); toast(`Deleted “${name}”. Pupils and clips are unchanged.`); break; }
+    case 'profile': S.ptab = 'clips'; go({name:'profile', sid:b.dataset.sid}); break;
+    case 'post': go({name:'post', id:b.dataset.id}); break;
+    case 'ptab': S.ptab = b.dataset.k; render(); break;
+    case 'pskill': S.pskill = b.dataset.k; render(); break;
+    case 'compare': go({name:'compare', sid:b.dataset.sid, skill:b.dataset.skill}); break;
+    case 'assess': go({name:'assess', id:b.dataset.id}); break;
+    case 'newfor': S.rec = newRec(b.dataset.sid); go({name:'new'}); break;
+    case 'startrec': startRecording(); break;
+    case 'stoprec': clearInterval(recTimer); S.rec.stage = 'form'; S.rec.source = 'camera'; render(); break;
+    case 'pick': S.rec.source = 'library'; render(); break;
+    case 'dropsim': S.rec.drop = b.checked; break;
+    case 'upload': { const r = S.rec; r.uploadId = 'u-' + Math.random().toString(16).slice(2,6); r.stage = 'compress'; r.pct = 0; r.dropped = false; r.retries = 0; render(); runUpload(); break; }
+    case 'retry': S.rec.stage = 'upload'; S.rec.retries++; render(); runUpload(); break;
+    case 'cancelup': clearInterval(upTimer); S.rec = newRec(S.rec.sid); render(); toast('Upload cancelled. Nothing was saved.'); break;
+    case 'level': { const c = clipById(S.view.id), R = RUBRICS[c.rubric], cr = R.criteria.find(x => x.key === b.dataset.c), l = +b.dataset.l;
+      c.scores[cr.key] = l; b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); $('desc-'+cr.key).textContent = cr.d[l-1]; break; }
+    case 'addmoment': { const c = clipById(S.view.id), inp = $('momentText'), P = [...players.values()][0]; if (!inp.value.trim()){ inp.focus(); toast('Write a short comment first'); break; }
+      c.moments.push({t: Math.round(P.t*10)/10, text: inp.value.trim()}); inp.value = ''; $('momentList').innerHTML = momentsHTML(c); toast('Comment pinned at ' + fmtT(P.t)); break; }
+    case 'restrict': { const c = clipById(S.view.id); c.restricted = b.checked; $('assessFoot').innerHTML = footHTML(c); const P = [...players.values()][0]; if (P) P.dirty = true; break; }
+    case 'savedraft': { const c = clipById(S.view.id); if (c.status !== 'published') c.status = 'draft'; toast(c.status==='published' ? 'Saved. Tap “Update for family” to share changes.' : 'Draft saved. Only staff can see it.'); break; }
+    case 'publish': { const c = clipById(S.view.id); if (c.restricted) break;
+      const R = RUBRICS[c.rubric]; if (!c.feedback.trim() || !R.criteria.some(cr => c.scores[cr.key])){ toast('Add overall feedback and at least one rubric level first'); break; }
+      const first = c.status !== 'published'; c.status = 'published';
+      if (first) D.alerts.unshift({kind:'update', clip:c.id, when:'Today, 10:30'});
+      if (c.goal && first){ (D.goals[c.sid] ||= []).unshift({text:c.goal, status:'progress', set:fmtDate(c.rec), clip:c.id, note:'Set with this feedback.'}); }
+      S.history = []; S.view = {name:'home'}; render(); toast(`Published to ${stu(c.sid).name.split(' ')[0]}'s family`); break; }
+    case 'setalign': { const ps = [...players.values()].filter(p => !p.thumb), P = b.dataset.key === 'a' ? ps[0] : ps[1]; P.align = P.t; P.playing = false;
+      $('al-' + b.dataset.key).textContent = 'Aligned at ' + fmtT(P.t); alignState(); break; }
+    case 'linkplay': { const ps = [...players.values()].filter(p => !p.thumb); const lead = Math.min(1, ...ps.map(p => p.align));
+      ps.forEach(p => { p.t = p.align - lead; p.speed = +b.dataset.v; p.playing = true; p.dirty = true;
+        document.querySelectorAll(`[data-action="speed"][data-pid="${p.id}"]`).forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === p.speed)); }); break; }
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.matches('input[type=range][data-pid]')){ const P = P_(t.dataset.pid); P.t = +t.value; P.playing = false; P.dirty = true; return; }
+  if (t.dataset.bind){ const c = clipById(S.view.id); c[t.dataset.bind] = t.value; return; }
+  if (t.id === 'groupName'){ S.gdraft.name = t.value; const er = $('groupErr'); if (er) er.textContent = ''; return; }
+  if (t.id === 'pupilSearch'){ S.q = t.value; const pos = t.selectionStart; render(); const n = $('pupilSearch'); n.focus(); n.setSelectionRange(pos,pos); return; }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.rec){ S.rec[t.dataset.rec] = t.value; return; }
+  if (t.dataset.cmp){ const k = t.dataset.cmp; if (k === 'sid' || k === 'skill'){ S.view[k] = t.value; S.view.a = S.view.b = null; } else S.view[k] = t.value; render(); }
+});
+// keep the "Add at" label in sync with the assess player
+setInterval(() => { const at = $('momentAt'); if (at){ const P = [...players.values()][0]; if (P) at.textContent = fmtT(P.t); } }, 120);
+let rz, lastW = innerWidth; window.addEventListener("resize", () => { if (Math.abs(innerWidth - lastW) < 2) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(render, 200); });
+document.fonts && document.fonts.ready.then(() => players.forEach(p => p.dirty = true));
+render();
+</script>

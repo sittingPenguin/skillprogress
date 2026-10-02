@@ -7,6 +7,7 @@ Private coaching-feedback app for school sport. Coaches film a skill, assess it 
 ## What's here
 
 ```
+demo/index.html  Clickable design demo (synthetic data, no backend)
 supabase/
   migrations/      Database schema, access rules, audit trail, video storage rules
   seed.sql         Synthetic demo data: two fictional schools, no real children
@@ -27,6 +28,10 @@ PGHOST=/tmp PGPORT=5432 PGUSER=postgres ./run_tests.sh
 ```
 
 `supabase/tests/00_supabase_shim.sql` imitates the parts of Supabase the rules depend on, so the tests run on plain Postgres. Never run the shim against a real project.
+
+## Live project
+
+Supabase project: `ftkakywjnokhmnzxilob` (London). Pilot data only; no real pupils yet.
 
 ## Deploying the database to Supabase
 
