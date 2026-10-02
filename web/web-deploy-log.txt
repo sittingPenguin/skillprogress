@@ -1,0 +1,7 @@
+> Project export: static
+- Preparing project
+- Creating deployment
+✔ Created deployment
+- Promoting deployment to production
+✔ Promoted deployment to production
+exit=0
