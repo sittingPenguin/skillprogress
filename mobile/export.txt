@@ -1,0 +1,21 @@
+Starting Metro Bundler
+
+Web Bundled 15908ms index.ts (183 modules)
+iOS Bundled 17349ms index.ts (582 modules)
+Android Bundled 19850ms index.ts (580 modules)
+
+› web bundles (1):
+_expo/static/js/web/index-7ed73e36bdae4d84e213f82c795e0d19.js (333KB)
+
+› ios bundles (1):
+_expo/static/js/ios/index-b946946050a2bf56258b3d5882943863.hbc (1.4MB)
+
+› android bundles (1):
+_expo/static/js/android/index-644938aab2426760b33d53af05683c6e.hbc (1.4MB)
+
+› Files (3):
+favicon.ico (15KB)
+index.html (1.2KB)
+metadata.json (244B)
+
+Exported: dist
