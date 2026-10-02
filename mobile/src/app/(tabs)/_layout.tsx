@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import type { ColorValue } from 'react-native';
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSession } from '../../lib/session';
@@ -13,7 +14,7 @@ export default function TabsLayout() {
 
   if (ready && (!session || !active)) return <Redirect href="/" />;
   const icon = (name: React.ComponentProps<typeof Ionicons>['name']) =>
-    ({ color, size }: { color: string; size: number }) => <Ionicons name={name} color={color} size={size} />;
+    ({ color, size }: { color: ColorValue; size: number }) => <Ionicons name={name} color={color as string} size={size} />;
 
   return (
     <Tabs screenOptions={{

@@ -1,0 +1,46 @@
+name: Build installable app (Expo)
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: android, ios or all
+        default: android
+      profile:
+        description: preview (testing) or production (stores)
+        default: preview
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_PUBLIC_SUPABASE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Link the Expo project (first run only)
+        run: |
+          if ! grep -q '"projectId"' app.json; then
+            npx --yes eas-cli@latest init --non-interactive --force
+            git config user.name "skillprogress-ci"; git config user.email "ci@users.noreply.github.com"
+            git add app.json && git commit -m "Link Expo project" && git push
+          fi
+      - name: Start the build
+        run: |
+          mkdir -p ../ci-out
+          npx --yes eas-cli@latest build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait --json \
+            > ../ci-out/eas-build.json 2> ../ci-out/eas-build-log.txt; echo "exit=$?" >> ../ci-out/eas-build-log.txt
+          cat ../ci-out/eas-build.json; tail -30 ../ci-out/eas-build-log.txt
+          grep -q '"id"' ../ci-out/eas-build.json
+      - name: Publish result to ci-results branch
+        if: always()
+        working-directory: .
+        run: |
+          git config user.name "skillprogress-ci"; git config user.email "ci@users.noreply.github.com"
+          git fetch origin ci-results && git worktree add -B ci-results /tmp/ci FETCH_HEAD
+          mkdir -p /tmp/ci/eas && cp ci-out/* /tmp/ci/eas/ 2>/dev/null; echo "${GITHUB_SHA}" > /tmp/ci/eas/commit.txt
+          cd /tmp/ci && git add -A && git commit -qm "EAS build ${GITHUB_RUN_ID}" && git push origin ci-results
