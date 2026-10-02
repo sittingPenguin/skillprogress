@@ -54,6 +54,8 @@ export default function ClipScreen() {
       <ClipPlayer storagePath={clip.storage_path} controller={player} />
       {isStaff ? <Button label={a ? 'Edit assessment' : 'Assess this clip'} icon="create-outline" onPress={() => router.push({ pathname: '/assess/[id]', params: { id: clip.id } })} /> : null}
 
+      <Button label="Compare with another session" icon="git-compare-outline" kind="secondary"
+        onPress={() => router.push({ pathname: '/compare/[student]', params: { student: clip.student_id, skill: clip.skill_id } })} />
       {a?.feedback ? <View style={{ gap: 6 }}><H2>Coach feedback</H2><P>{a.feedback}</P></View> : !isStaff ? null : <P muted>Not assessed yet.</P>}
       {a?.strengths || a?.to_improve ? (
         <View style={{ flexDirection: 'row', gap: space.m, flexWrap: 'wrap' }}>

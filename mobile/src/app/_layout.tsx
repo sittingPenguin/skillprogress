@@ -21,6 +21,7 @@ export default function RootLayout() {
           <Stack.Screen name="pupil/[id]" options={{ title: 'Pupil' }} />
           <Stack.Screen name="clip/[id]" options={{ title: 'Clip' }} />
           <Stack.Screen name="assess/[id]" options={{ title: 'Assess clip' }} />
+          <Stack.Screen name="compare/[student]" options={{ title: 'Compare' }} />
           <Stack.Screen name="record" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
         </Stack>
       </SessionProvider>

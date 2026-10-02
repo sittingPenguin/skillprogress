@@ -10,7 +10,7 @@ import { Loading, Notice } from './ui';
 
 const SPEEDS = [1, 0.5, 0.25];
 
-export interface PlayerApi { seek: (seconds: number) => void; time: () => number }
+export interface PlayerApi { seek: (seconds: number) => void; time: () => number; play: (rate?: number) => void; pause: () => void }
 type ControllerRef = React.MutableRefObject<PlayerApi | null>;
 
 export function ClipPlayer({ storagePath, aspect = 4 / 5, controller }: { storagePath: string; aspect?: number; controller?: ControllerRef }) {
@@ -43,6 +43,8 @@ function Player({ url, aspect, controller }: { url: string; aspect: number; cont
     controller.current = {
       seek: (sec) => { player.pause(); player.currentTime = Math.max(0, sec); },
       time: () => player.currentTime,
+      play: (rate) => { if (rate) { player.playbackRate = rate; setSpeed(rate); } player.play(); },
+      pause: () => player.pause(),
     };
     return () => { controller.current = null; };
   }, [player, controller]);

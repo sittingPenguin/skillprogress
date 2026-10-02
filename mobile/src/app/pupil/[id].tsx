@@ -43,6 +43,9 @@ export default function PupilProfile() {
         </View>
       </View>
       {isStaff ? <Button label="New clip for this pupil" icon="videocam-outline" onPress={() => router.push({ pathname: '/new', params: { student: pupil.id } })} /> : null}
+      {(clips ?? []).filter((c) => c.upload_status === 'ready').length >= 2
+        ? <Button label="Compare clips" icon="git-compare-outline" kind={isStaff ? 'secondary' : 'primary'} onPress={() => router.push({ pathname: '/compare/[student]', params: { student: pupil.id } })} />
+        : null}
       {error ? <Notice kind="warn">{error}</Notice> : null}
       <H2>Goals</H2>
       {goals.length === 0 ? <P muted>{isStaff ? 'Goals appear here when you publish feedback with a goal.' : 'Goals appear here when the coach sets one.'}</P> : null}
