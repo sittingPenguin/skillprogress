@@ -1,0 +1,38 @@
+name: Mobile app checks
+on:
+  push:
+    paths: ["mobile/**", ".github/workflows/mobile-check.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: https://ftkakywjnokhmnzxilob.supabase.co
+      EXPO_PUBLIC_SUPABASE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY || 'placeholder-key-for-build-checks-only' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Typecheck, doctor and bundle for Android, iOS and web
+        run: |
+          mkdir -p ../ci-out
+          set +e
+          npx tsc --noEmit > ../ci-out/typecheck.txt 2>&1; tsc=$?
+          npx expo-doctor > ../ci-out/doctor.txt 2>&1; doc=$?
+          npx expo export --platform all --output-dir dist > ../ci-out/export.txt 2>&1; exp=$?
+          echo "typecheck=$tsc doctor=$doc export=$exp" | tee ../ci-out/summary.txt
+          test $tsc -eq 0 -a $exp -eq 0
+      - name: Publish results to the ci-results branch (readable without log access)
+        if: always()
+        working-directory: .
+        run: |
+          git config user.name "skillprogress-ci"; git config user.email "ci@users.noreply.github.com"
+          git fetch origin ci-results || true
+          git worktree add -B ci-results /tmp/ci origin/ci-results 2>/dev/null || { git worktree add --detach /tmp/ci && cd /tmp/ci && git checkout --orphan ci-results && git rm -rf . -q; cd -; }
+          rm -rf /tmp/ci/mobile && mkdir -p /tmp/ci/mobile && cp ci-out/* /tmp/ci/mobile/
+          echo "${GITHUB_SHA}" > /tmp/ci/mobile/commit.txt
+          cd /tmp/ci && git add -A && git commit -qm "Mobile check for ${GITHUB_SHA::7}" && git push -f origin ci-results
