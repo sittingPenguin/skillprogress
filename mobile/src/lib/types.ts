@@ -33,6 +33,10 @@ export interface Group {
 
 export interface Assessment {
   id: string;
+  rubric_version_id?: string;
+  scores?: Record<string, number>;
+  strengths?: string | null;
+  to_improve?: string | null;
   status: 'draft' | 'published';
   feedback: string | null;
   next_goal: string | null;
@@ -41,6 +45,8 @@ export interface Assessment {
 
 export interface Clip {
   id: string;
+  school_id?: string;
+  restricted_reason?: string | null;
   student_id: string;
   skill_id: string;
   recorded_on: string;
@@ -56,3 +62,18 @@ export interface Clip {
 
 export const firstAssessment = (c: Clip): Assessment | null =>
   Array.isArray(c.assessments) ? c.assessments[0] ?? null : c.assessments;
+
+export interface RubricCriterion { key: string; name: string; descriptors: string[] }
+export interface RubricVersion { id: string; skill_id: string; version: number; levels: string[]; criteria: RubricCriterion[] }
+
+export interface Moment { id: string; at_ms: number; body: string; author_id: string }
+
+export type GoalStatus = 'in_progress' | 'achieved' | 'replaced';
+export interface Goal {
+  id: string; student_id: string; skill_id: string | null; text: string; status: GoalStatus; notes: string | null;
+  clip_id: string | null; published: boolean; set_on: string; closed_on: string | null; skills: { name: string } | null;
+}
+
+export const CLIP_SELECT =
+  'id, school_id, student_id, skill_id, recorded_on, uploaded_at, upload_status, storage_path, drill, restricted, restricted_reason, ' +
+  'skills(name), students(display_name), assessments(id, rubric_version_id, scores, status, feedback, strengths, to_improve, next_goal, published_at)';

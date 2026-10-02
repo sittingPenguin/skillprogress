@@ -10,7 +10,10 @@ import { Loading, Notice } from './ui';
 
 const SPEEDS = [1, 0.5, 0.25];
 
-export function ClipPlayer({ storagePath, aspect = 4 / 5 }: { storagePath: string; aspect?: number }) {
+export interface PlayerApi { seek: (seconds: number) => void; time: () => number }
+type ControllerRef = React.MutableRefObject<PlayerApi | null>;
+
+export function ClipPlayer({ storagePath, aspect = 4 / 5, controller }: { storagePath: string; aspect?: number; controller?: ControllerRef }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,15 +29,23 @@ export function ClipPlayer({ storagePath, aspect = 4 / 5 }: { storagePath: strin
 
   if (error) return <Notice kind="warn">{error}</Notice>;
   if (!url) return <Loading label="Loading clip…" />;
-  return <Player url={url} aspect={aspect} />;
+  return <Player url={url} aspect={aspect} controller={controller} />;
 }
 
-function Player({ url, aspect }: { url: string; aspect: number }) {
+function Player({ url, aspect, controller }: { url: string; aspect: number; controller?: ControllerRef }) {
   const t = useTheme();
   const player = useVideoPlayer(url, (p) => { p.timeUpdateEventInterval = 0.1; p.loop = false; });
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
   const time = useEvent(player, 'timeUpdate', { currentTime: 0, bufferedPosition: 0, currentLiveTimestamp: null, currentOffsetFromLive: null });
   const [speed, setSpeed] = useState(1);
+  useEffect(() => {
+    if (!controller) return;
+    controller.current = {
+      seek: (sec) => { player.pause(); player.currentTime = Math.max(0, sec); },
+      time: () => player.currentTime,
+    };
+    return () => { controller.current = null; };
+  }, [player, controller]);
 
   const step = (d: number) => { player.pause(); player.currentTime = Math.max(0, player.currentTime + d); };
   const setRate = (r: number) => { player.playbackRate = r; setSpeed(r); };

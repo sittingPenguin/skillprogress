@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
 import { clipDraft, type DraftVideo } from '../../lib/clipDraft';
 import { uploadQueue } from '../../lib/uploads';
+import { uploadFromBrowser } from '../../lib/webUpload';
 import type { Skill, Student } from '../../lib/types';
 import { space } from '../../lib/theme';
 import { Button, Chip, Field, H2, Loading, Notice, P, Screen, todayISO } from '../../components/ui';
@@ -25,6 +26,8 @@ export default function NewClip() {
   const [video, setVideo] = useState<DraftVideo | null>(clipDraft.get());
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Browser uploads keep one upload id across retries, so a retry never creates a second clip.
+  const [webUploadId, setWebUploadId] = useState<string | undefined>(undefined);
 
   useEffect(() => clipDraft.subscribe(() => setVideo(clipDraft.get())), []);
   useEffect(() => { if (params.student) setStudentId(params.student); }, [params.student]);
@@ -48,6 +51,15 @@ export default function NewClip() {
 
   async function pickFromLibrary() {
     setProblem(null);
+    if (Platform.OS === 'web') {
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], allowsEditing: false });
+      if (res.canceled || !res.assets[0]) return;
+      const a = res.assets[0];
+      if (a.fileSize && a.fileSize > 200 * 1024 * 1024) { setProblem('That video is over 200 MB. Film a shorter clip (under a minute).'); return; }
+      clipDraft.set({ uri: a.uri, durationMs: a.duration ?? null, source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
+      setWebUploadId(undefined);
+      return;
+    }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       setProblem(perm.canAskAgain ? 'SkillProgress needs access to your videos to upload a clip.' : 'Video access is turned off for SkillProgress. Turn it on in Settings, or record the clip in the app instead.');
@@ -57,12 +69,30 @@ export default function NewClip() {
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
     if (a.duration && a.duration > MAX_SECONDS * 1000) { setProblem(`That clip is longer than ${MAX_SECONDS} seconds. Trim it in Photos first, or record a shorter one.`); return; }
-    clipDraft.set({ uri: a.uri, durationMs: a.duration ?? null, source: 'library' });
+    clipDraft.set({ uri: a.uri, durationMs: a.duration ?? null, source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
+    setWebUploadId(undefined);
   }
 
   async function upload() {
     if (!student || !skill || !video) return;
     setBusy(true);
+    setProblem(null);
+    if (Platform.OS === 'web') {
+      try {
+        const blob = video.file ?? (await (await fetch(video.uri)).blob());
+        const res = await uploadFromBrowser({
+          file: blob, mimeType: video.mimeType ?? blob.type, studentId: student.id, skillId: skill.id,
+          recordedOn: date, drill: drill.trim() || null, durationMs: video.durationMs, uploadId: webUploadId,
+        });
+        clipDraft.set(null); setDrill(''); setStudentId(null); setDate(todayISO()); setWebUploadId(undefined);
+        router.push({ pathname: '/assess/[id]', params: { id: res.clipId } });
+      } catch (e) {
+        const id = (e as { uploadId?: string }).uploadId;
+        if (id) setWebUploadId(id);
+        setProblem('The upload didn’t finish. Check your connection and tap Upload clip again. It won’t create a duplicate.');
+      } finally { setBusy(false); }
+      return;
+    }
     try {
       await uploadQueue.add({
         sourceUri: video.uri, durationMs: video.durationMs, studentId: student.id, studentName: student.display_name,
@@ -75,7 +105,6 @@ export default function NewClip() {
     } finally { setBusy(false); }
   }
 
-  if (Platform.OS === 'web') return <Screen><Notice>Recording and uploading clips works in the SkillProgress phone and tablet app.</Notice></Screen>;
   if (!students) return <Screen><Loading /></Screen>;
 
   return (
@@ -112,10 +141,17 @@ export default function NewClip() {
           <Button label="Replace video" kind="secondary" onPress={() => clipDraft.set(null)} />
         </View>
       ) : (
-        <View style={{ flexDirection: 'row', gap: space.m }}>
-          <Button style={{ flex: 1 }} label="Record" icon="videocam" onPress={() => router.push('/record')} />
-          <Button style={{ flex: 1 }} label="Choose" icon="images-outline" kind="secondary" onPress={pickFromLibrary} />
-        </View>
+        Platform.OS === 'web' ? (
+          <View style={{ gap: space.s }}>
+            <Button label="Film or choose a video" icon="videocam" onPress={pickFromLibrary} />
+            <P muted>On an iPhone, tap “Take Video” to film straight away. Keep clips under a minute.</P>
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', gap: space.m }}>
+            <Button style={{ flex: 1 }} label="Record" icon="videocam" onPress={() => router.push('/record')} />
+            <Button style={{ flex: 1 }} label="Choose" icon="images-outline" kind="secondary" onPress={pickFromLibrary} />
+          </View>
+        )
       )}
       {problem ? (
         <View style={{ gap: space.s }}>
@@ -125,7 +161,7 @@ export default function NewClip() {
       ) : null}
 
       <Button label="Upload clip" icon="cloud-upload-outline" kind="accent" busy={busy} disabled={!student || !skill || !video || !validDate} onPress={upload} />
-      <P muted>Uploads continue in the background of the app and pick up where they left off if the Wi-Fi drops.</P>
+      <P muted>{Platform.OS === 'web' ? 'Keep this page open until the upload finishes. You’ll go straight to the assessment.' : 'Uploads continue in the background of the app and pick up where they left off if the Wi-Fi drops.'}</P>
     </Screen>
   );
 }

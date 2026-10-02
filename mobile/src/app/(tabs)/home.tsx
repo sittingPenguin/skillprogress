@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
-import { firstAssessment, type Clip, type Group, type Student } from '../../lib/types';
+import { CLIP_SELECT, firstAssessment, type Clip, type Group, type Student } from '../../lib/types';
 import { radius, space, useTheme } from '../../lib/theme';
 import { Avatar, Chip, Empty, fmtDate, Loading, Notice, P, Pill, Row } from '../../components/ui';
 
@@ -13,7 +13,6 @@ export default function Home() {
   return isStaff ? <Pupils /> : <FamilyUpdates />;
 }
 
-const CLIP_FIELDS = 'id, student_id, skill_id, recorded_on, uploaded_at, upload_status, storage_path, drill, restricted, skills(name), students(display_name), assessments(id, status, feedback, next_goal, published_at)';
 
 function Pupils() {
   const t = useTheme();
@@ -87,7 +86,7 @@ function FamilyUpdates() {
 
   const load = useCallback(async () => {
     setError(null);
-    const { data, error: e } = await supabase.from('clips').select(CLIP_FIELDS).order('recorded_on', { ascending: false }).limit(50);
+    const { data, error: e } = await supabase.from('clips').select(CLIP_SELECT).order('recorded_on', { ascending: false }).limit(50);
     if (e) { setError('Couldn’t load updates. Pull down to try again.'); return; }
     setClips((data ?? []) as unknown as Clip[]);
   }, []);

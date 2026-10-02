@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { ColorValue } from 'react-native';
+import { Platform, type ColorValue } from 'react-native';
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSession } from '../../lib/session';
@@ -25,7 +25,7 @@ export default function TabsLayout() {
     }}>
       <Tabs.Screen name="home" options={{ title: isStaff ? 'Pupils' : 'Updates', tabBarIcon: icon(isStaff ? 'people-outline' : 'home-outline') }} />
       <Tabs.Screen name="new" options={{ title: 'New clip', href: isStaff ? undefined : null, tabBarIcon: icon('add-circle-outline') }} />
-      <Tabs.Screen name="uploads" options={{ title: 'Uploads', href: isStaff ? undefined : null, tabBarIcon: icon('cloud-upload-outline'), tabBarBadge: pending || undefined }} />
+      <Tabs.Screen name="uploads" options={{ title: 'Uploads', href: isStaff && Platform.OS !== 'web' ? undefined : null, tabBarIcon: icon('cloud-upload-outline'), tabBarBadge: pending || undefined }} />
       <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: icon('person-circle-outline') }} />
     </Tabs>
   );

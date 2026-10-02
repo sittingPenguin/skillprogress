@@ -56,7 +56,7 @@ export function Button({ label, kind = 'primary', icon, busy, disabled, style, .
   );
 }
 
-export function Field({ label, hint, ...rest }: { label: string; hint?: string } & TextInputProps) {
+export function Field({ label, hint, style, ...rest }: { label: string; hint?: string } & TextInputProps) {
   const t = useTheme();
   return (
     <View style={{ gap: 6 }}>
@@ -64,7 +64,7 @@ export function Field({ label, hint, ...rest }: { label: string; hint?: string }
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={t.muted}
-        style={{ borderWidth: 1, borderColor: t.line, borderRadius: radius.m, paddingHorizontal: 14, minHeight: touch, fontSize: 16, color: t.ink, backgroundColor: t.bg }}
+        style={[{ borderWidth: 1, borderColor: t.line, borderRadius: radius.m, paddingHorizontal: 14, minHeight: touch, fontSize: 16, color: t.ink, backgroundColor: t.bg }, style]}
         {...rest}
       />
       {hint ? <Text style={{ fontSize: 13, color: t.muted }}>{hint}</Text> : null}

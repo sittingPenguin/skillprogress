@@ -1,6 +1,6 @@
 // Holds the clip being prepared on the New clip screen while the camera screen is open.
 type Listener = () => void;
-export interface DraftVideo { uri: string; durationMs: number | null; source: 'camera' | 'library' }
+export interface DraftVideo { uri: string; durationMs: number | null; source: 'camera' | 'library'; file?: Blob; mimeType?: string }
 
 let video: DraftVideo | null = null;
 const listeners = new Set<Listener>();
