@@ -21,7 +21,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "uk.jameswoodward.skillprogress"
+      "package": "uk.jameswoodward.skillprogress",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -49,6 +53,12 @@
       ]
     ],
     "scheme": "skillprogress",
-    "owner": "sittingpenguins-team"
+    "owner": "sittingpenguins-team",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6efd2a6a-ade9-4d31-839f-78a88c85296f"
+      }
+    }
   }
 }
