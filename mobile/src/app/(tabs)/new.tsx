@@ -13,6 +13,12 @@ import { Button, Chip, Field, H2, Loading, Notice, P, Screen, todayISO } from '.
 
 const MAX_SECONDS = 60;
 
+// Browsers report video length in seconds (e.g. 1.98); the phone apps report milliseconds.
+function toMs(d: number | null | undefined): number | null {
+  if (d == null || !isFinite(d) || d <= 0) return null;
+  return Math.round(Platform.OS === 'web' && d < 600 ? d * 1000 : d);
+}
+
 export default function NewClip() {
   const { active } = useSession();
   const params = useLocalSearchParams<{ student?: string }>();
@@ -57,7 +63,7 @@ export default function NewClip() {
       const a = res.assets[0];
       const size = a.fileSize ?? a.file?.size ?? 0;
       if (size > 50 * 1024 * 1024) { setProblem(`That video is ${Math.round(size / 1048576)} MB, over the 50 MB limit. Film a shorter clip: 20–30 seconds is plenty for one skill.`); return; }
-      clipDraft.set({ uri: a.uri, durationMs: a.duration ?? null, source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
+      clipDraft.set({ uri: a.uri, durationMs: toMs(a.duration), source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
       setWebUploadId(undefined);
       return;
     }
@@ -70,7 +76,7 @@ export default function NewClip() {
     if (res.canceled || !res.assets[0]) return;
     const a = res.assets[0];
     if (a.duration && a.duration > MAX_SECONDS * 1000) { setProblem(`That clip is longer than ${MAX_SECONDS} seconds. Trim it in Photos first, or record a shorter one.`); return; }
-    clipDraft.set({ uri: a.uri, durationMs: a.duration ?? null, source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
+    clipDraft.set({ uri: a.uri, durationMs: toMs(a.duration), source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
     setWebUploadId(undefined);
   }
 

@@ -26,7 +26,7 @@ export async function uploadFromBrowser(input: WebUploadInput): Promise<{ clipId
     contentType: input.mimeType || 'video/mp4', upsert: true,
   });
   if (up.error) throw Object.assign(new Error(up.error.message), { uploadId, step: 'Uploading the video' });
-  const done = await supabase.from('clips').update({ upload_status: 'ready', duration_ms: input.durationMs }).eq('id', clip.id);
+  const done = await supabase.from('clips').update({ upload_status: 'ready', duration_ms: input.durationMs == null ? null : Math.round(input.durationMs) }).eq('id', clip.id);
   if (done.error) throw Object.assign(new Error(done.error.message), { uploadId, step: 'Marking the clip ready' });
   return { clipId: clip.id, uploadId };
 }

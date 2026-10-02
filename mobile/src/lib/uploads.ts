@@ -211,7 +211,7 @@ class UploadQueue {
 
       // 3. Mark the clip ready and remove the local copy.
       const { error: e2 } = await supabase.from('clips')
-        .update({ upload_status: 'ready', duration_ms: item.durationMs })
+        .update({ upload_status: 'ready', duration_ms: item.durationMs == null ? null : Math.round(item.durationMs) })
         .eq('id', c.id);
       if (e2) throw new Error(e2.message);
       this.deleteLocal(item);
