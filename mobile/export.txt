@@ -1,9 +1,9 @@
 Using src/app as the root directory for Expo Router.
 Starting Metro Bundler
 
-Web Bundled 30436ms node_modules/expo-router/entry.js (1017 modules)
-iOS Bundled 38766ms node_modules/expo-router/entry.js (1321 modules)
-Android Bundled 47166ms node_modules/expo-router/entry.js (1454 modules)
+Web Bundled 28366ms node_modules/expo-router/entry.js (1011 modules)
+iOS Bundled 37063ms node_modules/expo-router/entry.js (1321 modules)
+Android Bundled 45610ms node_modules/expo-router/entry.js (1454 modules)
 
 › Assets (90):
 node_modules/@expo-google-fonts/material-symbols/400Regular/MaterialSymbols_400Regular.ttf (967KB)
@@ -73,14 +73,14 @@ node_modules/expo-router/assets/unmatched.20e71bdf79e3a97bf55fd9e164041578.png (
 node_modules/expo-router/assets/unmatched.png (4.8KB)
 
 › web bundles (2):
-_expo/static/js/web/entry-74e678a66495f74628312cdbf49ad641.js (2.1MB)
+_expo/static/js/web/entry-6feff02f4e4a05bf0d464602792f4716.js (2.1MB)
 _expo/static/js/web/index-52d51c233758b902c8f27605a35482d8.js (45KB)
 
 › ios bundles (1):
-_expo/static/js/ios/entry-7f038c18874eb14050a45b1fd9ba0c26.hbc (3.8MB)
+_expo/static/js/ios/entry-2fa07f9b647a162d37baaf866dd354c1.hbc (3.8MB)
 
 › android bundles (1):
-_expo/static/js/android/entry-6a2ad7e4d1d7233f8efd861ed973c4c9.hbc (4.1MB)
+_expo/static/js/android/entry-688e030cfdfe3288fe36bc84ca087a05.hbc (4.1MB)
 
 › Files (3):
 favicon.ico (15KB)
