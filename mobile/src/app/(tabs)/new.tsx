@@ -90,7 +90,8 @@ export default function NewClip() {
       } catch (e) {
         const id = (e as { uploadId?: string }).uploadId;
         if (id) setWebUploadId(id);
-        setProblem('The upload didn’t finish. Check your connection and tap Upload clip again. It won’t create a duplicate.');
+        const err = e as { step?: string; message?: string };
+        setProblem(`The upload didn’t finish. ${err.step ?? 'Something'} failed: ${err.message ?? 'unknown error'}. Tap Upload clip to try again. It won’t create a duplicate.`);
       } finally { setBusy(false); }
       return;
     }
