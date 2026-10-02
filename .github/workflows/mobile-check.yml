@@ -11,7 +11,7 @@ jobs:
     defaults: { run: { working-directory: mobile } }
     env:
       EXPO_PUBLIC_SUPABASE_URL: https://ftkakywjnokhmnzxilob.supabase.co
-      EXPO_PUBLIC_SUPABASE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY || 'placeholder-key-for-build-checks-only' }}
+      EXPO_PUBLIC_SUPABASE_KEY: sb_publishable_w5W3p5v0IbNxDw46FVBibg_93F2GOWg
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
