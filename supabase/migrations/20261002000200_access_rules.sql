@@ -148,7 +148,6 @@ do $$ declare t text; begin
     'groups','group_members','group_coaches','sports','skills','rubric_versions','clips','assessments',
     'clip_moments','coach_notes','goals','data_requests','audit_log'] loop
     execute format('alter table public.%I enable row level security', t);
-    execute format('alter table public.%I force row level security', t);
     execute format('revoke all on public.%I from anon', t);
     execute format('grant select, insert, update, delete on public.%I to authenticated', t);
   end loop;
