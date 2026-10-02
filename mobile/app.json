@@ -1,13 +1,17 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "SkillProgress",
+    "slug": "skillprogress",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "uk.jameswoodward.skillprogress",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -16,7 +20,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "uk.jameswoodward.skillprogress"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -25,7 +30,23 @@
       "expo-router",
       "expo-status-bar",
       "expo-secure-store",
-      "expo-video"
-    ]
+      "expo-video",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SkillProgress uses the camera to film pupils practising a skill so their coach can give feedback.",
+          "microphonePermission": "SkillProgress records sound with practice clips so coaches can hear instructions.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SkillProgress lets you choose an existing practice clip to upload."
+        }
+      ]
+    ],
+    "scheme": "skillprogress",
+    "owner": "sittingpenguins-team"
   }
 }
