@@ -89,7 +89,11 @@ export default function Assess() {
     setMessage(null);
     if (mode === 'publish') {
       if (restricted) { setMessage({ kind: 'warn', text: 'This clip is flagged because other pupils are visible. Review it and clear the flag before publishing.' }); return; }
-      if (!feedback.trim() || !Object.keys(scores).length) { setMessage({ kind: 'warn', text: 'Add overall feedback and at least one rubric level before publishing.' }); return; }
+      const missing = [
+        !Object.keys(scores).length ? 'choose at least one rubric level' : null,
+        !feedback.trim() ? 'write something in “Overall feedback”' : null,
+      ].filter(Boolean);
+      if (missing.length) { setMessage({ kind: 'warn', text: `Nearly there. Before publishing, ${missing.join(' and ')}.` }); return; }
     }
     setBusy(mode);
     try {
