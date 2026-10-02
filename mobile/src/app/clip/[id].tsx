@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,8 +19,8 @@ export default function ClipScreen() {
   const [rubric, setRubric] = useState<RubricVersion | null>(null);
   const [moments, setMoments] = useState<Moment[]>([]);
 
-  useEffect(() => {
-    (async () => {
+  const load = useCallback(async () => {
+    {
       const { data } = await supabase.from('clips').select(CLIP_SELECT).eq('id', id).maybeSingle();
       const c = (data as unknown as Clip) ?? null;
       setClip(c);
@@ -32,8 +32,9 @@ export default function ClipScreen() {
       ]);
       setRubric((r.data as RubricVersion | null) ?? null);
       setMoments((m.data ?? []) as Moment[]);
-    })();
+    }
   }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   if (clip === undefined) return <Screen><Loading /></Screen>;
   if (clip === null || !clip.storage_path) return <Screen><Empty icon="lock-closed-outline" title="Clip unavailable" body="It may not be published yet, or your access has changed." /></Screen>;
@@ -41,7 +42,7 @@ export default function ClipScreen() {
   const isPublished = a?.status === 'published';
 
   return (
-    <Screen>
+    <Screen onRefresh={load}>
       <Stack.Screen options={{ title: clip.skills?.name ?? 'Clip' }} />
       {published ? <Notice>Published. {clip.students?.display_name}’s family can now see this feedback.</Notice> : null}
       <View style={{ gap: 4 }}>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { FlatList, ScrollView, Text, TextInput, View } from 'react-native';
+import { usePullToRefresh } from '../../components/Refresh';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
@@ -22,7 +23,6 @@ function Pupils() {
   const [groupId, setGroupId] = useState<string>('all');
   const [q, setQ] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!active) return;
@@ -37,6 +37,7 @@ function Pupils() {
   }, [active]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+  const pull = usePullToRefresh(load);
 
   const shown = useMemo(() => {
     if (!students) return [];
@@ -50,9 +51,10 @@ function Pupils() {
     <FlatList
       style={{ backgroundColor: t.bg }}
       contentContainerStyle={{ padding: space.l, gap: 2, maxWidth: 720, width: '100%', alignSelf: 'center' }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}
+      {...pull.scrollProps}
       ListHeaderComponent={
         <View style={{ gap: space.m, marginBottom: space.s }}>
+          {pull.header}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             <Chip label={`Everyone (${students?.length ?? 0})`} selected={groupId === 'all'} onPress={() => setGroupId('all')} />
             {groups.map((g) => <Chip key={g.id} label={`${g.name} (${g.group_members.length})`} selected={groupId === g.id} onPress={() => setGroupId(g.id)} />)}
@@ -82,7 +84,6 @@ function FamilyUpdates() {
   const t = useTheme();
   const [clips, setClips] = useState<Clip[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -91,13 +92,15 @@ function FamilyUpdates() {
     setClips((data ?? []) as unknown as Clip[]);
   }, []);
   useEffect(() => { load(); }, [load]);
+  const pull = usePullToRefresh(load);
 
   return (
     <FlatList
       style={{ backgroundColor: t.bg }}
       contentContainerStyle={{ padding: space.l, gap: space.m, maxWidth: 720, width: '100%', alignSelf: 'center' }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}
+      {...pull.scrollProps}
       ListHeaderComponent={<View style={{ gap: space.m }}>
+        {pull.header}
         <Notice>Only you and your child’s school can see these updates. They are never public.</Notice>
         {error ? <Notice kind="warn">{error}</Notice> : null}
       </View>}

@@ -6,15 +6,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { radius, space, touch, useTheme } from '../lib/theme';
+import { usePullToRefresh } from './Refresh';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-export function Screen({ children, scroll = true, padded = true }: { children: React.ReactNode; scroll?: boolean; padded?: boolean }) {
+export function Screen({ children, scroll = true, padded = true, onRefresh }:
+  { children: React.ReactNode; scroll?: boolean; padded?: boolean; onRefresh?: () => Promise<unknown> | void }) {
   const t = useTheme();
+  const pull = usePullToRefresh(onRefresh);
   const inner = <View style={[{ maxWidth: 720, width: '100%', alignSelf: 'center' }, padded && { padding: space.l, gap: space.l }]}>{children}</View>;
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: t.bg }}>
-      {scroll ? <ScrollView keyboardShouldPersistTaps="handled">{inner}</ScrollView> : inner}
+      {scroll ? <ScrollView keyboardShouldPersistTaps="handled" {...pull.scrollProps}>{pull.header}{inner}</ScrollView> : inner}
     </SafeAreaView>
   );
 }

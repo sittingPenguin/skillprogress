@@ -33,7 +33,7 @@ export default function PupilProfile() {
   if (!pupil) return <Screen><Empty icon="lock-closed-outline" title="Pupil unavailable" body="This pupil isn’t in your classes, or your access has changed." /></Screen>;
 
   return (
-    <Screen>
+    <Screen onRefresh={load}>
       <Stack.Screen options={{ title: pupil.display_name }} />
       <View style={{ flexDirection: 'row', gap: space.l, alignItems: 'center' }}>
         <Avatar name={pupil.display_name} id={pupil.id} size={72} />
