@@ -55,7 +55,8 @@ export default function NewClip() {
       const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], allowsEditing: false });
       if (res.canceled || !res.assets[0]) return;
       const a = res.assets[0];
-      if (a.fileSize && a.fileSize > 200 * 1024 * 1024) { setProblem('That video is over 200 MB. Film a shorter clip (under a minute).'); return; }
+      const size = a.fileSize ?? a.file?.size ?? 0;
+      if (size > 50 * 1024 * 1024) { setProblem(`That video is ${Math.round(size / 1048576)} MB, over the 50 MB limit. Film a shorter clip: 20–30 seconds is plenty for one skill.`); return; }
       clipDraft.set({ uri: a.uri, durationMs: a.duration ?? null, source: 'library', file: a.file ?? undefined, mimeType: a.mimeType ?? undefined });
       setWebUploadId(undefined);
       return;
@@ -144,7 +145,7 @@ export default function NewClip() {
         Platform.OS === 'web' ? (
           <View style={{ gap: space.s }}>
             <Button label="Film or choose a video" icon="videocam" onPress={pickFromLibrary} />
-            <P muted>On an iPhone, tap “Take Video” to film straight away. Keep clips under a minute.</P>
+            <P muted>On an iPhone, tap “Take Video” to film straight away. Keep clips to 20–30 seconds.</P>
           </View>
         ) : (
           <View style={{ flexDirection: 'row', gap: space.m }}>
