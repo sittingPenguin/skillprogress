@@ -1,13 +1,3 @@
 npm warn exec The following package was not found and will be installed: expo-doctor@1.20.4
 Running 21 checks on your project...
-20/21 checks passed. 1 checks failed. Possible issues detected:
-Use the --verbose flag to see more details about passed checks.
-
-✖ Check that required peer dependencies are installed
-Missing peer dependency: expo-font
-Required by: @expo/vector-icons
-Advice:
-Install missing required peer dependency with "npx expo install expo-font"
-Your app may crash outside of Expo Go without this dependency. Native module peer dependencies must be installed directly.
-
-1 check failed, indicating possible issues with the project.
+21/21 checks passed. No issues detected!

@@ -1,9 +1,9 @@
 Using src/app as the root directory for Expo Router.
 Starting Metro Bundler
 
-Web Bundled 39114ms node_modules/expo-router/entry.js (1015 modules)
-iOS Bundled 46645ms node_modules/expo-router/entry.js (1318 modules)
-Android Bundled 54030ms node_modules/expo-router/entry.js (1451 modules)
+Web Bundled 40632ms node_modules/expo-router/entry.js (1015 modules)
+iOS Bundled 48703ms node_modules/expo-router/entry.js (1316 modules)
+Android Bundled 56526ms node_modules/expo-router/entry.js (1451 modules)
 
 › Assets (90):
 node_modules/@expo-google-fonts/material-symbols/400Regular/MaterialSymbols_400Regular.ttf (967KB)
