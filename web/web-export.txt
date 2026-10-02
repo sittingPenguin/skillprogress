@@ -1,7 +1,7 @@
 Using src/app as the root directory for Expo Router.
 Starting Metro Bundler
 
-Web Bundled 20485ms node_modules/expo-router/entry.js (1018 modules)
+Web Bundled 18735ms node_modules/expo-router/entry.js (1019 modules)
 
 › Assets (37):
 node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.3f78af31cca60105799838a1a7a59fbd.ttf (130KB)
@@ -37,8 +37,8 @@ node_modules/expo-router/assets/sitemap.412dd9275b6b48ad28f5e3d81bb1f626.png (46
 node_modules/expo-router/assets/unmatched.20e71bdf79e3a97bf55fd9e164041578.png (4.8KB)
 
 › web bundles (2):
-_expo/static/js/web/entry-9dc8908065aa9be4c3f75b1cf704d504.js (2.1MB)
-_expo/static/js/web/index-52d51c233758b902c8f27605a35482d8.js (45KB)
+_expo/static/js/web/entry-007ad71903c6f17e4c67d1cd5ce9ca2c.js (2.1MB)
+_expo/static/js/web/index-be0c9b3e694d64fe69cf7849fb3acadc.js (45KB)
 
 › Files (3):
 favicon.ico (15KB)
